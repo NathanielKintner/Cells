@@ -1,0 +1,37 @@
+All organisms are based on a genetic code. 
+This code is simply a semi-structured string; less organized than a serialized object but more than random characters.
+
+The code is broken into three layers, separated by pipe <  "|"  > characters
+	1. Compound layer
+	2. Parts layer
+	3. Link layer
+
+
+Compound layer:
+
+gldjhcek;igcdd;gbinc;hmmei;en;ffmdbkc;nlafj;f;gdijije;fbllnjj;ncnimjl;fedj;m;iglfoha;cdmmbalgfc;elhfkg;bkmlh;hcddfoei;dc;lkdialm;
+
+Alphabetic characters delimited by semicolons. Each of the sections represents a compound, which can be constructed from the elements with
+the same name as the character.
+
+There are exactly 256 ; characters in this string. After the last, there is a |
+
+
+Following the |, we have the Parts layer.
+
+This is a string 256*7 of hexadecimal values, each between 1 and 255, skipping the | character because that would be awkward
+
+Starting from any point in this layer, we can define an organelle via the next six indices:
+                                   startIDX                             +1                         +2                          +3                      +4                      +5
+[stuff][things][garbage][whatever][index of compound in compound layer][this+math=critical region][this+math = organelle type][this+math = metadata 1][this+math = metadata 2][this+math = metadata 3][more garbage][whocares][bleh]
+
+
+Then, another |. Then, the Link layer!
+
+This is also hexidecimal values, with the same restrictions as the parts layer.
+
+Each index of these can be interpreted as an index in the parts layer. This adds another layer of complexity however, in that it also starts
+interpreting various parts of the parts layer as ways to find other locations in the links layer.
+
+The 
+

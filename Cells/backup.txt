@@ -1,0 +1,81 @@
+Organism* ParseCode(std::string code)
+{
+	std::string chunk;
+	//get the compound section
+	std::stringstream code_input(code);
+	std::getline(code_input, chunk, '|');
+	std::string compound;
+	std::vector<Compound> allComps(0);
+
+	ParseComps(chunk, compound, allComps);
+
+
+	std::string sparts;
+	std::getline(code_input, sparts, '|');
+	unsigned char* parts;
+	parts = (unsigned char*)sparts.c_str();
+	std::string slinks;
+	std::getline(code_input, slinks, '|');
+	unsigned char* links;
+	links = (unsigned char*)slinks.c_str();
+
+	Organism* ret = new Organism();
+	ret->code = code;
+	Organelle* start = ParsePart(allComps, parts, links, 0, ret);
+
+	std::vector<int> pendingLinks(0);
+	pendingLinks.emplace_back(1);
+	ret->AllOrganelles.emplace_back(start);
+	ret->center = ret->AllOrganelles[0];
+	for (size_t idx = 0; idx < ret->AllOrganelles.size(); idx++)
+	{
+		ret->CheckRep();
+		//idx in links where this link is
+		size_t currentlinkidx = pendingLinks[idx];
+		//the link itself, which points into parts
+		unsigned char currentlink = links[currentlinkidx];
+		//an indicator of whether we should add more parts or not
+		unsigned char operation = ((parts[currentlink] % 8) + 3) / 5;
+		int target = 0;
+		switch (operation)
+		{
+		case(0):
+			//loop back
+			target = parts[currentlink + 1] % 4 - parts[currentlink + 2] % 4;
+			target = (idx + target) % ret->AllOrganelles.size();
+			if (target != idx)
+			{
+				ret->AllOrganelles[idx]->ConnectTo(ret->AllOrganelles[target]);
+			}
+			ret->CheckRep();
+			ret->CheckRep();
+			break;
+		case(1):
+			//branch out
+			target = (parts[currentlink + 1] % 2 + 1) * parts[currentlink + 1] % 4 + 1;
+			for (int i = 0; i < target; i++)
+			{
+				currentlinkidx += (parts[(currentlink + 2 + 2 * i) % 256] % 8) * (parts[(currentlink + 3 + 2 * i) % 256] % 8);
+				if (currentlinkidx >= slinks.size())
+				{
+					break;
+				}
+				Organelle* newOrg = ParsePart(allComps, parts, links, currentlinkidx, ret);
+				ret->AllOrganelles.emplace_back(newOrg);
+				ret->AllOrganelles[idx]->ConnectTo(ret->AllOrganelles[ret->AllOrganelles.size() - 1]);
+				pendingLinks.emplace_back(currentlinkidx + 1);
+				ret->CheckRep();
+				ret->CheckRep();
+			}
+			break;
+		case(2):
+			//end, do nothing. perhaps there will be something to do here one day
+			ret->CheckRep();
+			ret->CheckRep();
+			break;
+		}
+		ret->CheckRep();
+	}
+	return ret;
+
+}
