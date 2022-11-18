@@ -1,0 +1,141 @@
+So.
+
+Instead of doing any of that groovy environment-creating thing... I moved and got a new job. Lmao.
+
+Facebook is fine, but it's a little dull. It doesn't feel like im trying to tear my soul out through my asshole, but also they usually give me somewhat impossible problems to solve and im getting a little tired of that.
+
+The goal is the same, but the approach is becoming different.
+
+While in hawaii, I played around with some of the downstream implications of having solid objects in the enviroment. You need to bump into them! And they (to some extent) need to bump into each other. I requested a moment of brainstorming with the other individuals in the room, and discussed the ways in which one could efficiently determine if several thousant rectangles were overlapping if given nothing but a large quantity of pens and paper. I later expressed my desire for additional granularity and much messier hitboxes.
+
+My dear partner opined that an ecosystem where individual particles interacted with each other to create emergent complexity was silly and out-of-reach, and that I should settle for a mathematical approximation along the lines of "integers x and y represent the number of particles or organisms, and you do math to figure out how many of them interact and reproduce."
+
+Thats a   l o t   simpler than what I am going for, and it fails to achieve the "organic" evolution that I am trying to achieve. However, the observation that complex systems of many interacting entities can be approximated by vastly simpler math is astute to say the least. Some differential equations can predict multi-species population dynamics with uncanny accuracy.
+
+Given that my focus is not on the environment per se, but rather the development of species within their environment, it makes sense to me to simplify and/or shortcut a lot of the reactions that go on in liquids, and indeed to shortcut liquids themselves! We don't need to know about every single particle, we don't need to simulate an entire atmosphere of brownian motion. We can simplify.
+
+That may justify.... a n o t h e r    c h e m i s t r y   o v e r h a u l.
+
+Anywayyyyyyyyyyyyyyyyyy with that thought pocketed for later consumption, lets talk solids.
+
+Organism-Environment interaction is a BIG goal, and it's more or less totally unachieved.
+In order to interact, organisms must change the enviroment chemically or physically, or be changed chemically or physically. Baseline goal, we want to be able to dig and bump into walls.
+
+Fine-grained solids require fine grained information about where things collide, and checking every point in space that is taken up by a blobby shape to see if that spot is also occupied by another blobby shape is very expensive.
+
+HOWEVER, we can make a few observations that allow us to shortcut this a bit.
+Observation 1: Squares are very easy to check collision on. If you have two squares, you know their position, and you know their side lengths, you know if they are overlapping without doing nearly any actual math. This is true of rectangles in general, but
+Observation 2: If at every point in space you write down the biggest square that can exist at that location without bumping into something, you have an O(1) collision checker.
+
+O(1) collision checking is pretty insane, and of course comes with some HARD drawbacks. For one thing, all organelles need to be square, and snap to grid positions (at least in the backend)! For another, whenever a solid in the environment moves, we will need to re-write the empty space around it to maintain this cache of information.
+
+This doesn't help us with organism collisions, since organisms will move a LOT. However, since we have already decided that they are all squares and there will be a relatively small number of them for any other organism to check... this should not be an issue.
+
+Since re-calculating distances to solid objects for every single particle is silly in situations where multiple particles are in motion, we will calculate these as "sheets", repainting the entire screen every frame. There should be a lot of ways that we can potentially shortcut this so we arent literally doing a calculation across every single pixel in the world every single tick, but honestly compared to what weve been doing it's really not even that bad.
+
+Once organisms are snapping to grid locations and judging space via notes left by solids, it will be FAR easier to talk about which solids/organelles are adjacent to/touching/overlapping each other, which will make it far easier to govern things like creating new connections, entering the membrane of another organism, etc.
+
+Heres another big, hairy fish to fry: decentralized organisms!
+
+The idea here is to capture several of the biggest, messiest facets of biology by removing the idea of an organism and instead rely solely on genetic information and constituent parts.
+
+Pieces of a living thing can continue functioning in weird contexts. A chicken with it's head cut off can still run around.
+
+However, a more fundamental and central observation is that mitochondria have their OWN dna, and are multi-membraned. Essentially, they were a seperate organism at one point in evolutionary history, and to a degree they maintain that seperation. All eukaryotes are the result of messy, weird fusion between multiple organisms.
+Furthermore, bacteria swap genetic material between each other all the time, and can essentially "try it out".
+Sexual reproduction is incredibly useful for keeping genetic diversity alive within a species, and helps to propagate helpful and neutral mutations, while allowing some negative mutations to be overridden by a dominant allele.
+Some organisms even have multiple life cycles, and exist as both a haploid and diploid species, kind of like if sperm and eggs went off and had a whole life of their own.
+
+Viruses are all about the introduction of foreign genetic material into a host.
+
+Lichens are a fungus and an algae fused together in one "body".
+
+We have bacteria living in our guts.
+
+Chloroplasts have several extra membranes and their own DNA, and may have been consumed/incorporated multiple times.
+
+There is an extremely blurry line between single-celled colonial organisms and multicellular non-colonial ones.
+
+Basically, the idea of an organism is made up by humans to help them make sense of the absolute garbage that constitutes biology. It's a concept, not a specific "real" thing.
+
+I would like the simulation to capture this.
+
+There are two major hurdles to overcome:
+1. DNA at a non-organism granularity, i.e. neural nets and other intra-active behaviour not linked to a central organism object.
+2. DNA swapping, propagation, and mutability, allowing for sexual reproduction/genetic 'sampling'/viruses/multicellularity/colonialism
+
+Therefore....
+
+DNA needs to be more changeable. And movable. It may need to be several different sizes? This I am not sure about. It may need to be an organelle?
+
+If it's an organelle as they are currently conceptualized, it will need to be built from itself, which makes no sense. It can't store enough information in only part of itself to re-create the whole (without zipping or some shit lol) So, a "copy DNA" function is in order.
+
+We can, on the other hand, have an organelle that always holds a verbtim copy of the DNA, and that can certainly be coded for.
+
+This adds an additional layer of complexity to the barebones requirements for a functional organism. The ultra-simple "just a factory" will be totally dead, and the slightly more realistic factory-and-generator needs an extra piece as well.
+
+This is probably fine? Maybe?
+
+The super-simple could (should?) totally have a place in a fancy ecosystem.
+
+We could make factories more complex... allow them to incorporate new pieces of DNA? They can still store it, but also re-make it and spit out a pellet of it?
+
+This seems fine-ish. It's just another thing in the space around the factory, which can interact with said factory.
+
+We could maybe do a similar thing with energy? That sounds pretty gross though. Energy is probably better off as an integer...
+
+So, a factory could:
+	Read its stored DNA and produce a free-floating thing
+	Read its stored DNA and produce an attached thing
+	Read and copy its stored DNA, and spit it out as a chromosome organelle
+	Pick up a chromosome and use the information to replace its current stored DNA
+
+	Constructed factories would come with.... probably just a slightly mutated version of the parent's DNA
+
+With all these extra copies, this could start to take up a LOT more space. To help tone that down, we can store diffs of DNA, and store whole sequences centrally (outside of any organelles or organisms, *in the aether*).
+
+This doesn't really let us have pieces of DNA. Hmm.
+
+We could give everything a default number of chromosomes, 8 or 16 is probably convienient.
+
+Factory can produce any set of them, bundled together.
+
+.....What do we have to do in order ot get sexual reproduction to make sense?
+
+And haploid vs diploid-ness.
+
+Factory has to make different decisions based on its DNA... and possibly the number of chromosomes it has access to?
+
+It could always hold the same number... or not.
+
+It can always have a full set of chromosomes floating around next to it, but that seems tenuous and unlikely, especially if they overwrite each other.
+
+It could automatically spit out whatever chromosomes it wasnt using, and just end up swapping.
+
+If a virus was able to enter and spew its chromosome at the factory, it could then co-opt it.
+
+We arent really getting diploidal behaviour here though... I think?
+
+It has to swap them out to use the other, and won't divide with both of them necessarily.
+
+It doesn't seem feasable to encode within DNA an instruction to copy a DIFFERENT chromosome... what if there isn't one there? How would you bootstrap that?
+
+Adjusting the length of the DNA seems somewhat unwise, thats how we've indexed everything.
+
+What does it even mean to be diploid?
+We have two copies of every chromosome. And, they hold genes in the same location on each one.
+
+The genes for eye color appear on each copy in the same spot.
+
+
+
+
+
+
+
+
+
+
+
+
+

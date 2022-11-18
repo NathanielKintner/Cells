@@ -207,6 +207,7 @@
     <Text Include="GeneticsExplanation.txt" />
     <Text Include="ravings1.txt" />
     <Text Include="ravings2.txt" />
+    <Text Include="ravings3.txt" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="8514oem.fon">

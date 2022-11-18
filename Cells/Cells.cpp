@@ -252,7 +252,8 @@ int runSim()
         }
         if (step < 1 && false)
             continue;
-        if(step%refresh == 0)
+        //if(step%refresh == 0)
+        if (step % 3 == 0)
             DisplayAll(window);
 
         for (Organism* o : Universe::allLife)
