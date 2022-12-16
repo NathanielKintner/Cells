@@ -15,7 +15,7 @@ Compound* ReactionSpace::GetReactantWithKey(int key)
 	return nullptr;
 }
 
-void ReactionSpace::ResolveSituation(Compound pieces[], int numpieces, int key)
+void ReactionSpace::ResolveSituation(int key)
 {
 	return;
 }

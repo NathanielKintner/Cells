@@ -1,5 +1,81 @@
 #include "GeneticsManager.h"
 
+void RandomizeChromosome(Chromosome * chr)
+{
+	for (int i = 0; i < 256; i++)
+	{
+		chr->dna[i] = rand() % 255;
+	}
+}
+
+void CopyChromosome(Chromosome* copyfrom, Chromosome* copyto)
+{
+	for (int i = 0; i < 256; i++)
+	{
+		copyto->dna[i] = copyfrom->dna[i];
+	}
+}
+
+void MutateChromosome(Chromosome* chr)
+{
+	//start at somewhere between 3 and negative 3, repeat until you hit 0 (3, 2, 1, or 0 times)
+	for (int i = rand() % 7 - 3; i > 0; i--)
+	{
+		chr->dna[rand() % 256] = rand() % 256;
+	}
+}
+
+Organelle* CreateOrganelle(Chromosome* chr, unsigned char location)
+{
+	//pointer to new organelle
+	Organelle* ret = new Organelle;
+
+	int idx = 0;
+	ret->metaData1 = chr->dna[(location + idx) % 256];
+	idx++;
+	ret->metaData2 = chr->dna[(location + idx) % 256];
+	idx++;
+	ret->metaData3 = chr->dna[(location + idx) % 256];
+	idx++;
+	ret->metaData4 = chr->dna[(location + idx) % 256];
+	idx++;
+
+	for (int i = 0; i < NUM_COMMUNICATION_CHANNELS; i++)
+	{
+		ret->communication_channels[i] = chr->dna[(location + idx) % 256];
+		idx++;
+	}
+
+	for (int i = 0; i < NUM_ACTIVATION_OPTIONS; i++)
+	{
+		ret->activation_channels[i] = chr->dna[(location + idx) % 256];
+		idx++;
+	}
+
+	for (int i = 0; i < NUM_ACTIVATION_OPTIONS; i++)
+	{
+		ret->activation_locations[i] = chr->dna[(location + idx) % 256];
+		idx++;
+	}
+
+	for (int i = 0; i < NN_TOTAL_SIZE; i++)
+	{
+		ret->Brain.netLayers[i] = chr->dna[(location + idx) % 256];
+		idx++;
+	}
+
+
+
+	//      structure  critical region
+	//ret->init(orgComp, parts[partIdx + 1] % 3 + 2);
+	ret->tempinit();
+	ret->geneticCode = *chr;
+	//init called last to allow the organelle to access its metadata before deciding how to initialize
+	return ret;
+}
+
+
+
 class ConnectionGroup
 {
 public:
@@ -62,84 +138,84 @@ std::string CreateRandomCode(std::vector<std::string> universeComps)
 }
 
 
-Organism* ParseCode(std::string code)
-{
-	std::string partsString;
-	std::string linksString;
-	std::string neuralNetString;
+//Organism* ParseCode(std::string code)
+//{
+//	std::string partsString;
+//	std::string linksString;
+//	std::string neuralNetString;
+//
+//	std::vector<std::string> compStrings(0);
+//
+//	DisassembleCode(code, compStrings, partsString, linksString, neuralNetString);
+//	return ReproduceFromCodeLayers(compStrings, partsString, linksString, neuralNetString);
+//}
 
-	std::vector<std::string> compStrings(0);
-
-	DisassembleCode(code, compStrings, partsString, linksString, neuralNetString);
-	return ReproduceFromCodeLayers(compStrings, partsString, linksString, neuralNetString);
-}
-
-Organism* ReproduceFromCodeLayers(std::vector<std::string>& compStrings, std::string& partsString, std::string& linksString, std::string& neuralNetString)
-{
-	//seems odd to literally start by mutating the code, but it comes in handy later so lets get it out of the way
-	Organism* ret = new Organism();
-	//deep copy
-	ret->parts = partsString;
-	ret->links = linksString;
-	ret->neuralNetString = neuralNetString;
-	for (std::string str : compStrings)
-	{
-		ret->compounds.emplace_back(str);
-	}
-	//aaand apply radioactive spider bites
-	MutateCodeLayers(ret->compounds, ret->parts, ret->links, ret->neuralNetString);
-	//the new organism's code is now eXtrA fuNkY
-
-	//create brain, using UN-MUTATED STRING
-	ret->Brain.LoadNet(neuralNetString.c_str());
-
-	std::vector<int> pendingLinks(0);
-	std::vector<int> linkBranches(0);
-
-
-	unsigned char* parts;
-	parts = (unsigned char*)partsString.c_str();
-	unsigned char* links;
-	links = (unsigned char*)linksString.c_str();
-
-	ConstructLinks(parts, links, linksString.size(), 0, pendingLinks, linkBranches);
-	Organelle* start = ParsePart(compStrings, parts, links, 0, ret);
-	ret->AllOrganelles.emplace_back(start);
-	size_t processedidx = 0;
-	size_t createdidx = 1;
-	ret->center = ret->AllOrganelles[0];
-	for (; processedidx < pendingLinks.size(); processedidx++)
-	{
-		ret->CheckRep();
-		int branchBehaviour = linkBranches[processedidx];
-		if (branchBehaviour < 0)
-		{
-			//loop back, remove the 10 we put there earlier
-			int target = ((branchBehaviour * -1) - 10 + processedidx) % ret->AllOrganelles.size();
-			if (target != processedidx)
-			{
-				ret->AllOrganelles[processedidx]->ConnectTo(ret->AllOrganelles[target]);
-				ret->CheckRep();
-				ret->CheckRep();
-			}
-		}
-		else if (branchBehaviour > 0)
-		{
-			//branch or at least continue
-			for (int i = 0; i < branchBehaviour; i++)
-			{
-				Organelle* newOrg = ParsePart(compStrings, parts, links, pendingLinks[createdidx], ret);
-				ret->AllOrganelles.emplace_back(newOrg);
-				ret->AllOrganelles[processedidx]->ConnectTo(ret->AllOrganelles[createdidx]);
-				ret->CheckRep();
-				createdidx++;
-			}
-		}
-		ret->CheckRep();
-	}
-
-	return ret;
-}
+//Organism* ReproduceFromCodeLayers(std::vector<std::string>& compStrings, std::string& partsString, std::string& linksString, std::string& neuralNetString)
+//{
+//	//seems odd to literally start by mutating the code, but it comes in handy later so lets get it out of the way
+//	Organism* ret = new Organism();
+//	//deep copy
+//	ret->parts = partsString;
+//	ret->links = linksString;
+//	ret->neuralNetString = neuralNetString;
+//	for (std::string str : compStrings)
+//	{
+//		ret->compounds.emplace_back(str);
+//	}
+//	//aaand apply radioactive spider bites
+//	MutateCodeLayers(ret->compounds, ret->parts, ret->links, ret->neuralNetString);
+//	//the new organism's code is now eXtrA fuNkY
+//
+//	//create brain, using UN-MUTATED STRING
+//	ret->Brain.LoadNet(neuralNetString.c_str());
+//
+//	std::vector<int> pendingLinks(0);
+//	std::vector<int> linkBranches(0);
+//
+//
+//	unsigned char* parts;
+//	parts = (unsigned char*)partsString.c_str();
+//	unsigned char* links;
+//	links = (unsigned char*)linksString.c_str();
+//
+//	ConstructLinks(parts, links, linksString.size(), 0, pendingLinks, linkBranches);
+//	Organelle* start = ParsePart(compStrings, parts, links, 0, ret);
+//	ret->AllOrganelles.emplace_back(start);
+//	size_t processedidx = 0;
+//	size_t createdidx = 1;
+//	ret->center = ret->AllOrganelles[0];
+//	for (; processedidx < pendingLinks.size(); processedidx++)
+//	{
+//		ret->CheckRep();
+//		int branchBehaviour = linkBranches[processedidx];
+//		if (branchBehaviour < 0)
+//		{
+//			//loop back, remove the 10 we put there earlier
+//			int target = ((branchBehaviour * -1) - 10 + processedidx) % ret->AllOrganelles.size();
+//			if (target != processedidx)
+//			{
+//				ret->AllOrganelles[processedidx]->ConnectTo(ret->AllOrganelles[target]);
+//				ret->CheckRep();
+//				ret->CheckRep();
+//			}
+//		}
+//		else if (branchBehaviour > 0)
+//		{
+//			//branch or at least continue
+//			for (int i = 0; i < branchBehaviour; i++)
+//			{
+//				Organelle* newOrg = ParsePart(compStrings, parts, links, pendingLinks[createdidx], ret);
+//				ret->AllOrganelles.emplace_back(newOrg);
+//				ret->AllOrganelles[processedidx]->ConnectTo(ret->AllOrganelles[createdidx]);
+//				ret->CheckRep();
+//				createdidx++;
+//			}
+//		}
+//		ret->CheckRep();
+//	}
+//
+//	return ret;
+//}
 
 void DisassembleCode(std::string code, std::vector<std::string>& compStrings, std::string& partsString, std::string& linksString, std::string& neuralNetString)
 {
@@ -266,44 +342,44 @@ void ConstructLinks(unsigned char parts[], unsigned char links[], int numLinks, 
 	}
 }
 
-Organelle* ParsePart(std::vector<std::string>& compoundStrings, unsigned char parts[], unsigned char links[], int idx, Organism * parentPtr)
-{
-	//pointer to new organelle
-	Organelle* ret;
-	//where this part's details are located
-	unsigned char partIdx = links[idx];
-	//this is the type of organelle
-	switch (parts[partIdx + 2] % 5)
-	{
-	case 0:
-		ret = new Factory;
-		break;
-	case 1:
-		ret = new Membrane;
-		break;
-	case 2:
-		ret = new Generator;
-		break;
-	case 3:
-		ret = new Muscle;
-		break;
-	default:
-		ret = new Organelle;
-		break;
-	}
-	
-	ret->metaData1 = parts[partIdx + 3];
-	ret->metaData2 = parts[partIdx + 4];
-	ret->metaData3 = parts[partIdx + 5];
-	ret->metaData4 = parts[partIdx + 6];
-
-	Compound orgComp = Compound(compoundStrings[parts[partIdx] % compoundStrings.size()]);
-
-	//      structure  critical region
-	ret->init(orgComp, parts[partIdx + 1] % 3 + 2, parentPtr);
-	//init called last to allow the organelle to access its metadata before decide how to initialize
-	return ret;
-}
+//Organelle* ParsePart(std::vector<std::string>& compoundStrings, unsigned char parts[], unsigned char links[], int idx, Organism * parentPtr)
+//{
+//	//pointer to new organelle
+//	Organelle* ret;
+//	//where this part's details are located
+//	unsigned char partIdx = links[idx];
+//	//this is the type of organelle
+//	switch (parts[partIdx + 2] % 5)
+//	{
+//	case 0:
+//		ret = new Factory;
+//		break;
+//	case 1:
+//		ret = new Membrane;
+//		break;
+//	case 2:
+//		ret = new Generator;
+//		break;
+//	case 3:
+//		ret = new Muscle;
+//		break;
+//	default:
+//		ret = new Organelle;
+//		break;
+//	}
+//	
+//	ret->metaData1 = parts[partIdx + 3];
+//	ret->metaData2 = parts[partIdx + 4];
+//	ret->metaData3 = parts[partIdx + 5];
+//	ret->metaData4 = parts[partIdx + 6];
+//
+//	Compound orgComp = Compound(compoundStrings[parts[partIdx] % compoundStrings.size()]);
+//
+//	//      structure  critical region
+//	ret->init(orgComp, parts[partIdx + 1] % 3 + 2);
+//	//init called last to allow the organelle to access its metadata before deciding how to initialize
+//	return ret;
+//}
 
 std::string ConcatCodeLayers(std::vector<std::string>& compStrings, std::string& partsString, std::string& linksString, std::string& neuralNetString)
 {
@@ -323,50 +399,50 @@ std::string MutateCode(std::string code)
 	std::string linksString;
 	std::string neuralNetString;
 	DisassembleCode(code, compStrings, partsString, linksString, neuralNetString);
-	MutateCodeLayers(compStrings, partsString, linksString, neuralNetString);
+	//MutateCodeLayers(compStrings, partsString, linksString, neuralNetString);
 	return ConcatCodeLayers(compStrings, partsString, linksString, neuralNetString);
 }
 
-void MutateCodeLayers(std::vector<std::string>& compStrings, std::string & partsString, std::string& linksString, std::string& neuralNetString)
-{
-	for (int i = rand() % 6 - 3; i > 0; i--)
-	{
-		partsString[rand() % 256] = 1 + rand() % 250;
-		neuralNetString[rand() % (NN_TOTAL_SIZE)] = 1 + rand() % 250;
-		linksString[rand() % linksString.size()] = 1 + rand() % 250;
-	}
-	if (rand() % ((linksString.size()/2) * (linksString.size()/3)) == 0)
-	{
-		linksString = linksString + (char)(1 + rand() % 250);
-	}
-	int compidx1 = rand() % (compStrings.size()-1);
-	Compound comp1 = Compound(compStrings[compidx1]);
-	int ielem1 = comp1.filledIndices[rand() % comp1.filledIndices.size()];
-	FastDelete(compStrings, compidx1);
-	int compidx2 = rand() % (compStrings.size()-1);
-	Compound comp2 = Compound(compStrings[compidx2]);
-	int ielem2 = comp2.filledIndices[rand() % comp2.filledIndices.size()];
-	FastDelete(compStrings, compidx2);
-	int stability = 0;
-	PerformReactionIfGoodEnough(&comp1, &comp2, rand() % 20 - 10, stability, ielem1, ielem2);
-	compStrings.emplace_back(compStrings[compidx2]);
-	compStrings[compidx2] = comp2.ChemicalString();
-	if (comp1.mass != 0)
-	{
-		int numPieces = 0;
-		Compound* pieces = comp1.SplitCompound(ielem1, numPieces);
-		if (pieces == nullptr)
-		{
-			compStrings.emplace_back(compStrings[compidx1]);
-			compStrings[compidx1] = comp1.ChemicalString();
-		}
-		else
-		{
-			for (int i = 0; i < numPieces; i++)
-			{
-				compStrings.emplace_back(pieces[i].ChemicalString());
-			}
-			delete[] pieces;
-		}
-	}
-}
+//void MutateCodeLayers(std::vector<std::string>& compStrings, std::string & partsString, std::string& linksString, std::string& neuralNetString)
+//{
+//	for (int i = rand() % 6 - 3; i > 0; i--)
+//	{
+//		partsString[rand() % 256] = 1 + rand() % 250;
+//		neuralNetString[rand() % (NN_TOTAL_SIZE)] = 1 + rand() % 250;
+//		linksString[rand() % linksString.size()] = 1 + rand() % 250;
+//	}
+//	if (rand() % ((linksString.size()/2) * (linksString.size()/3)) == 0)
+//	{
+//		linksString = linksString + (char)(1 + rand() % 250);
+//	}
+//	int compidx1 = rand() % (compStrings.size()-1);
+//	Compound comp1 = Compound(compStrings[compidx1]);
+//	int ielem1 = comp1.filledIndices[rand() % comp1.filledIndices.size()];
+//	FastDelete(compStrings, compidx1);
+//	int compidx2 = rand() % (compStrings.size()-1);
+//	Compound comp2 = Compound(compStrings[compidx2]);
+//	int ielem2 = comp2.filledIndices[rand() % comp2.filledIndices.size()];
+//	FastDelete(compStrings, compidx2);
+//	int stability = 0;
+//	PerformReactionIfGoodEnough(&comp1, &comp2, rand() % 20 - 10, stability, ielem1, ielem2);
+//	compStrings.emplace_back(compStrings[compidx2]);
+//	compStrings[compidx2] = comp2.ChemicalString();
+//	if (comp1.mass != 0)
+//	{
+//		int numPieces = 0;
+//		Compound* pieces = comp1.SplitCompound(ielem1, numPieces);
+//		if (pieces == nullptr)
+//		{
+//			compStrings.emplace_back(compStrings[compidx1]);
+//			compStrings[compidx1] = comp1.ChemicalString();
+//		}
+//		else
+//		{
+//			for (int i = 0; i < numPieces; i++)
+//			{
+//				compStrings.emplace_back(pieces[i].ChemicalString());
+//			}
+//			delete[] pieces;
+//		}
+//	}
+//}

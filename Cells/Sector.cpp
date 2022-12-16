@@ -43,31 +43,13 @@ Compound* Sector::GetReactantWithKey(int key)
 	return solution[filledIdxs[key]];
 }
 
-void Sector::ResolveSituation(Compound pieces[], int numpieces, int key)
+void Sector::ResolveSituation(int key)
 {
-	if (key != -1)
-	{		
-		int solutionLocation = filledIdxs[key];
-		if (solution[solutionLocation]->mass == 0 || numpieces != 1)
-		{
-			Compound * removedComp = RemoveCompoundByIdxInList(key);
-			delete removedComp;
-		}
-		for (int i = 0; i < numpieces; i++)
-		{
-			Compound* newComp = new Compound();
-			*newComp = pieces[i];
-			AddCompoundToLocationInSolution(newComp, key);
-		}		
-	}
-	else
+	int solutionLocation = filledIdxs[key];
+	if (solution[solutionLocation]->elementCount == 0)
 	{
-		for (int i = 0; i < numpieces; i++)
-		{
-			Compound* newComp = new Compound();
-			*newComp = pieces[i];
-			AddCompoundToLocationInSolution(newComp, rand() % 25);
-		}
+		Compound* removedComp = RemoveCompoundByIdxInList(key);
+		delete removedComp;
 	}
 }
 

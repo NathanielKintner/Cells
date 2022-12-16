@@ -1,11 +1,11 @@
 #include "Universe.h"
-#include "Organism.h"
+#include "Organelle.h"
 
 using namespace Universe;
 
 std::vector<Sector> Universe::worldHexes(0);
-std::vector<Organism*> Universe::allLife(0);
-std::vector<Organism*> Universe::newLife(0);
+std::vector<Organelle*> Universe::allLife(0);
+std::vector<Organelle*> Universe::newLife(0);
 //typedef std::unordered_map<char, Element> hashElement;
 //hashElement Universe::ptableHash;
 
@@ -100,4 +100,27 @@ Sector& Universe::getSectorAtLocation(int xpos, int ypos)
 	}
 	Sector& s = Universe::worldHexes[x + y * Universe::numxsectors];
 	return s;
+}
+
+void Universe::addOrganelleToLocalPopulation(int xpos, int ypos, Organelle* o)
+{
+	int x = xpos / Universe::sectorPixels;
+	if (x >= Universe::numxsectors)
+	{
+		x = Universe::numxsectors - 1;
+	}
+	if (x < 0)
+	{
+		x = 0;
+	}
+	int y = ypos / Universe::sectorPixels;
+	if (y >= Universe::numysectors)
+	{
+		y = Universe::numysectors - 1;
+	}
+	if (y < 0)
+	{
+		y = 0;
+	}
+	Universe::worldHexes[x + y * Universe::numxsectors].localPopulation.emplace_back(o);
 }

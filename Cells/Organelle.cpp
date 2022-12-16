@@ -1,16 +1,25 @@
 #include "Organelle.h"
 #include "Organism.h"
 #include "Membrane.h"
+#include "NeuralNet.h"
 
 
-void Organelle::init(Compound struc, int crit, Organism * parentPtr)
+void Organelle::init(Compound struc, int crit)
 {
-	parent = parentPtr;
 	outerMembrane = nullptr;
 	structure = struc;
 	criticalRegion = crit;
-	CriticalIdentity = GetCriticalCharge();
+	//CriticalIdentity = GetCriticalCharge();
 	UtilityMarker = 0;
+}
+
+
+void Organelle::tempinit()
+{
+	outerMembrane = nullptr;
+	UtilityMarker = 0;
+	//make a random structure
+	structure = Compound();
 }
 
 int Organelle::mass()
@@ -75,6 +84,24 @@ char Organelle::ConnectOneWay(Organelle* o, unsigned char & Metadata)
 //severs all incoming connections, severing all outgoing connections is trivial and generally unnecessary
 void Organelle::SeverAllConnections()
 {
+	for (Organelle* o : innerOrganelles)
+	{
+		if (o == nullptr)
+		{
+			int asdffdsa = 1;
+		}
+		o->outerMembrane = outerMembrane;
+		if (outerMembrane != nullptr)
+		{
+			outerMembrane->innerOrganelles.push_back(o);
+			unsigned char meta = (outerMembrane->innerOrganelles.size() * -1);
+			o->outerMembraneConnectionMetadata = meta;
+		}
+		else
+		{
+			o->outerMembraneConnectionMetadata = -1;
+		}
+	}
 	isded = 1;
 	int target = connections.size();//force an optimization, we dont care if connections changes size
 	//tell all connections to disconnect from us
@@ -85,6 +112,10 @@ void Organelle::SeverAllConnections()
 	//tell membrane to disconnect from us
 	if (outerMembrane != nullptr)
 	{
+		for (Compound* c : innerSolution)
+		{
+			outerMembrane->innerSolution.emplace_back(c);
+		}
 		outerMembrane->DisconnectOneWay(outerMembraneConnectionMetadata);
 		if (structure.mass != 0)
 		{
@@ -94,16 +125,17 @@ void Organelle::SeverAllConnections()
 		}
 	}
 	else
-	{
-		if (parent->hasBeenPlaced)
+	{	
+		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
+		for (Compound* c : innerSolution)
 		{
-			Sector& s = Universe::getSectorAtLocation(xpos, ypos);
-			if (structure.mass != 0)
-			{
-				Compound * c = new Compound();
-				*c = structure;
-				s.AddCompoundToRandomLocationInSolution(c);				
-			}		
+			s.AddCompoundToRandomLocationInSolution(c);
+		}
+		if (structure.mass != 0)
+		{
+			Compound* c = new Compound();
+			*c = structure;
+			s.AddCompoundToRandomLocationInSolution(c);
 		}
 	}
 }
@@ -111,24 +143,69 @@ void Organelle::SeverAllConnections()
 //disconnect from the organelle corresponding to the metadata
 void Organelle::DisconnectOneWay(unsigned char Metadata)
 {
-	FastDelete(connections, Metadata);
-	FastDelete(connectionMetaData, Metadata);
-	if (connections.size() != Metadata)
+	if (((char)Metadata) >= 0)
 	{
-		//we just moved an entry, so if that entry tries to delete we will not be looking in the wrong place.
-		//we send them an updated piece of metadata so that they can find us and then change our delete metadata
-		connections[Metadata]->UpdateConnectionMetaData(connectionMetaData[Metadata], Metadata);
+		FastDelete(connections, Metadata);
+		FastDelete(connectionMetaData, Metadata);
+		if (connections.size() != Metadata)
+		{
+			//we just moved an entry, so if that entry tries to delete we will not be looking in the wrong place.
+			//we send them an updated piece of metadata so that they can find us and then change our delete metadata
+			connections[Metadata]->UpdateConnectionMetaData(connectionMetaData[Metadata], Metadata);
+		}
+	}
+	else
+	{
+		unsigned char negMetaData = ((char)Metadata) * -1 - 1;
+		FastDelete(innerOrganelles, negMetaData);
+		if (innerOrganelles.size() != negMetaData)
+		{
+			//we just moved an entry, so if that entry tries to get us to delete them we will be looking in the wrong place.
+			//we send them an updated piece of metadata so that they can find us on their end and then change our delete metadata
+			innerOrganelles[negMetaData]->outerMembraneConnectionMetadata = Metadata;
+		}
 	}
 }
 
 void Organelle::UpdateConnectionMetaData(unsigned char MetadataToFindEntry, unsigned char MetadataToChangeEntryTo)
 {
+	//I don't understand this if statement right now, its from membrane.
+	//im sure I will find out why it matters later lol
+	/*if ((char)MetadataToFindEntry >= 0)
+	{
+		Organelle::UpdateConnectionMetaData(MetadataToFindEntry, MetadataToChangeEntryTo);
+	}*/
 	connectionMetaData[MetadataToFindEntry] = MetadataToChangeEntryTo;
+}
+
+void Organelle::MakePresenceKnown()
+{
+	Universe::addOrganelleToLocalPopulation(xpos, ypos, this);
+	Universe::addOrganelleToLocalPopulation(xpos + Universe::sectorPixels, ypos, this);
+	Universe::addOrganelleToLocalPopulation(xpos - Universe::sectorPixels, ypos, this);
+	Universe::addOrganelleToLocalPopulation(xpos, ypos + Universe::sectorPixels, this);
+	Universe::addOrganelleToLocalPopulation(xpos, ypos - Universe::sectorPixels, this);
+	Universe::addOrganelleToLocalPopulation(xpos + Universe::sectorPixels, ypos + Universe::sectorPixels, this);
+	Universe::addOrganelleToLocalPopulation(xpos - Universe::sectorPixels, ypos + Universe::sectorPixels, this);
+	Universe::addOrganelleToLocalPopulation(xpos + Universe::sectorPixels, ypos - Universe::sectorPixels, this);
+	Universe::addOrganelleToLocalPopulation(xpos - Universe::sectorPixels, ypos - Universe::sectorPixels, this);
 }
 
 void Organelle::SendRepositionRequests()
 {
-	for (Organelle* o : connections)
+	for (Organelle* o : innerOrganelles)
+	{
+		int xdelta = xpos - o->xpos;
+		int ydelta = ypos - o->ypos;
+		double distance = sqrt(xdelta * xdelta + ydelta * ydelta);
+		int desiredDistance = size() * 2 - o->size() * 2 - 3;
+		if (desiredDistance - distance < 0)
+		{
+			double ratio = desiredDistance / (distance + 1);
+			o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, 6);
+		}
+	}
+	/*for (Organelle* o : connections)
 	{
 		int xdelta = xpos - o->xpos;
 		int ydelta = ypos - o->ypos;
@@ -139,11 +216,29 @@ void Organelle::SendRepositionRequests()
 			double ratio = desiredDistance / (distance + 1);
 			o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, 1);
 		}
-	}
+	}*/
 	std::vector<Organelle*>* sameLevel = 0;
 	if (outerMembrane == nullptr)
 	{
-		sameLevel = &(parent->AllOrganelles);
+		//sameLevel = &(parent->AllOrganelles);
+		//we need to implement the ability for organelles to find each other in the wild
+		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
+		for (Organelle* o: s.localPopulation)
+		{
+			if (o == this)
+			{
+				continue;
+			}
+			int xdelta = xpos - o->xpos;
+			int ydelta = ypos - o->ypos;
+			double distance = sqrt(xdelta * xdelta + ydelta * ydelta);
+			int desiredDistance = o->size() * 2 + size() * 2 + 10;
+			if (distance < desiredDistance)
+			{
+				double ratio = desiredDistance / (distance + 1);
+				o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, desiredDistance - distance);
+			}
+		}
 	}
 	else
 	{
@@ -162,22 +257,27 @@ void Organelle::SendRepositionRequests()
 		}
 		sameLevel = &(outerMembrane->innerOrganelles);
 	}
-	for (Organelle* o : *sameLevel)
+	//currently the below won't run unless it's inside a membrane
+	//we have to implement the wild organelle finder
+	if (sameLevel != nullptr)
 	{
-		if (outerMembrane == o->outerMembrane)
+		for (Organelle* o : *sameLevel)
 		{
-			int xdelta = xpos - o->xpos;
-			int ydelta = ypos - o->ypos;
-			int desiredDistance = o->size() * 2 + size() * 2 + 10;
-			if (abs(xdelta) + abs(ydelta) > desiredDistance)//if possible, do this much cheaper calulation and then skip
+			if (outerMembrane == o->outerMembrane)
 			{
-				continue;
-			}
-			double distance = sqrt(xdelta * xdelta + ydelta * ydelta);
-			if (distance < desiredDistance)
-			{
-				double ratio = desiredDistance / (distance + 1);
-				o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, 3);
+				int xdelta = xpos - o->xpos;
+				int ydelta = ypos - o->ypos;
+				int desiredDistance = o->size() * 2 + size() * 2 + 10;
+				if (abs(xdelta) + abs(ydelta) > desiredDistance)//if possible, do this much cheaper calulation and then skip
+				{
+					continue;
+				}
+				double distance = sqrt(xdelta * xdelta + ydelta * ydelta);
+				if (distance < desiredDistance)
+				{
+					double ratio = desiredDistance / (distance + 1);
+					o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, 3);
+				}
 			}
 		}
 	}
@@ -185,16 +285,16 @@ void Organelle::SendRepositionRequests()
 
 void Organelle::ReceiveRepositionRequest(int deltax, int deltay, int force)
 {
-	xposRequest += deltax * force;
-	yposRequest += deltay * force;
-	totalRequestForce += force;
+	xposRequest += deltax * force * 100;
+	yposRequest += deltay * force * 100;
+	totalRequestForce += force * 100;
 }
 
 void Organelle::Reposition()
 {
-	int xmove = xposRequest / (totalRequestForce + 1);
-	xpos += xmove;
-	int ymove = yposRequest / (totalRequestForce + 1);
+	int xmove = xposRequest / (totalRequestForce + 1) + rand() % 3 - 1;//add a bit of random drift
+	xpos += xmove; //change position 
+	int ymove = yposRequest / (totalRequestForce + 1) + rand() % 3 - 1;
 	ypos += ymove;
 	xposRequest = xmove * 3;//continue to "coast" a little
 	yposRequest = ymove * 3;
@@ -203,23 +303,90 @@ void Organelle::Reposition()
 
 void Organelle::Sense()
 {
-	parent->Brain.SetNNInputForChar(metaData3, Organelle::AlivenessPercentageGuess());
+	//parent->Brain.SetNNInputForChar(metaData3, Organelle::AlivenessPercentageGuess());
+	Brain.SetNNInputForChar(metaData3, Organelle::AlivenessPercentageGuess());
+	Brain.SetNNInputForChar(1, (energy / 10) - 9);
+	Brain.SetNNInputForChar(36, connections.size());
+	//for each connected organelle
+	for (Organelle* o : connections)
+	{
+		//for each communication channel, of which there are 4
+		for (int i = 0; i < NUM_COMMUNICATION_CHANNELS; i++)
+		{
+			//read some of their outputs into our inputs
+			Brain.SetNNInputForChar(communication_channels[i], o->Brain.GetNNOutputForChar(communication_channels[i]));
+		}
+	}
 }
 
 void Organelle::Activate()
 {
+	energy -= 1;
+	//energy += 5;
+	Sense();
+	Brain.RunNet();
+	for (int i = 0; i < NUM_ACTIVATION_OPTIONS; i++)
+	{		
+		TakeAction(Brain.GetNNOutputForChar(activation_channels[i]), activation_locations[i]);
+	}
 	return;
+}
+
+//the heart of the new system
+//NNOutput is a char with some value equal to the output of our neural net
+//location is a pre-defined location that we decided on when this organelle was created
+//we use location to pick a spot on the DNA, which we take the modulus of to determine what the action will be
+//we use the location, the decision, and the NNoutput to determine the behaviour of the organelle will be
+void Organelle::TakeAction(int NNOutput, unsigned char location)
+{
+	char decision = geneticCode.dna[location];
+
+	Chromosome newChrom;
+
+	switch (decision % 5)
+	{
+	case 0:
+		//eat
+		energy += 5;
+		break;
+	case 1:
+		//reproduce?
+		if (energy > 10000)
+		{
+			energy -= 10000;
+			CopyChromosome(&geneticCode, &newChrom);
+			MutateChromosome(&newChrom);
+			Organelle* o = CreateOrganelle(&newChrom, location + 1);
+
+			o->xpos = xpos + rand() % 800 - 400;
+			o->ypos = ypos + rand() % 800 - 400;
+
+			ConnectTo(o);
+
+			Universe::newLife.emplace_back(o);
+		}
+		break;
+	case 2:
+		//tbd
+		break;
+	case 3:
+		//tbd
+		break;
+	default:
+		//tbd
+		break;
+	}
 }
 
 int Organelle::size()
 {
-	return 5;
+	return 50;
 }
 
 
 void Organelle::Display(sf::RenderWindow& window, int zoom, int staticXOffset, int staticYOffset)
 {
-	if (parent->center == this && false)
+	/*if (parent->center == this && false)
 	{
 		sf::Font font;
 		font.loadFromFile("arial.ttf");
@@ -231,10 +398,10 @@ void Organelle::Display(sf::RenderWindow& window, int zoom, int staticXOffset, i
 		txt.setOrigin(size() * 0.9 / zoom, size() * 0.9 / zoom);
 		txt.setFillColor(sf::Color::Blue);
 		window.draw(txt);
-	}
+	}*/
 	sf::CircleShape drawOrg((size() * 1.8) / zoom, 20);
 	drawOrg.setFillColor(sf::Color(0, 0, 0, 0));
-	drawOrg.setOutlineThickness(10.0 / zoom);
+	drawOrg.setOutlineThickness(30.0 / zoom);
 	drawOrg.setOutlineColor(structure.GetColor());
 	drawOrg.setPosition(staticXOffset + (xpos - size()) / zoom, staticYOffset + (ypos - size()) / zoom);
 	drawOrg.setOrigin(size() * 0.9 / zoom, size() * 0.9 / zoom);
@@ -253,7 +420,7 @@ void Organelle::Display(sf::RenderWindow& window, int zoom, int staticXOffset, i
 
 void Organelle::DoChemistry(std::vector<Compound*>& reactants)
 {
-	ReactionSpace* solptr;
+	/*ReactionSpace* solptr;
 	if (outerMembrane == nullptr)
 	{
 		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
@@ -312,7 +479,7 @@ void Organelle::DoChemistry(std::vector<Compound*>& reactants)
 	comp2->TranslateFromIdxToXY(ielem2, x2, y2);
 	int threshold = rand() % 21 - 10 + rand() % 21 - 10 + rand() % 21 - 10 + rand() % 21 - 10 + rand() % 21 - 10 + rand() % 35 - 35;
 	
-	CallReactionAndCleanUp(comp1, comp2, stability, ielem1, idxidx1, ielem2, true, threshold, *solptr, reactants, Comp1IsStructure, randIdx, randIdx);
+	CallReactionAndCleanUp(comp1, comp2, stability, ielem1, idxidx1, ielem2, true, threshold, *solptr, reactants, Comp1IsStructure, randIdx, randIdx);*/
 	/*
 	if (rand() % 2 == 1)//remove from structure	
 	{
@@ -411,25 +578,25 @@ void Organelle::DoChemistry(std::vector<Compound*>& reactants)
 
 bool Organelle::IsAlive()
 {
-	Element e = GetCriticalCharge();
-	if (e.red < 1)
-	{
-		return false;
-	}
-	//as red increases (and therefore so does mass and size), so does the tolerance for damage
-	int threshold = CriticalIdentity.red / 2;
-	if (abs(e.red - CriticalIdentity.red) > threshold)
-	{
-		return false;
-	}
-	if (abs(e.blue - CriticalIdentity.blue) > threshold)
-	{
-		return false;
-	}
-	if (abs(e.green - CriticalIdentity.green) > threshold)
-	{
-		return false;
-	}
+	//Element e = GetCriticalCharge();
+	//if (e.red < 1)
+	//{
+	//	return false;
+	//}
+	////as red increases (and therefore so does mass and size), so does the tolerance for damage
+	//int threshold = CriticalIdentity.red / 2;
+	//if (abs(e.red - CriticalIdentity.red) > threshold)
+	//{
+	//	return false;
+	//}
+	//if (abs(e.blue - CriticalIdentity.blue) > threshold)
+	//{
+	//	return false;
+	//}
+	//if (abs(e.green - CriticalIdentity.green) > threshold)
+	//{
+	//	return false;
+	//}
 	return true;
 }
 
@@ -437,43 +604,44 @@ bool Organelle::IsAlive()
 //an estimation for how close this organelle is to dying, based on the same calculations as IsAlive()
 int Organelle::AlivenessPercentageGuess()
 {
-	Element e = GetCriticalCharge();
+	/*Element e = GetCriticalCharge();
 	if (e.red < 1)
 	{
 		return 0;
 	}
 	int threshold = CriticalIdentity.red / 2;
-	return threshold * 3 - abs(e.red - CriticalIdentity.red) - abs(e.blue - CriticalIdentity.blue) - abs(e.green - CriticalIdentity.green);
+	return threshold * 3 - abs(e.red - CriticalIdentity.red) - abs(e.blue - CriticalIdentity.blue) - abs(e.green - CriticalIdentity.green);*/
+	return -1;
 }
 
-Element Organelle::GetCriticalCharge()
-{
-	Element ret = Element();
-	int structsize = structure.composition.size();
-	if (structsize < criticalRegion*criticalRegion)
-	{
-		ret.red = -1;
-		return ret;
-	}
-	for (int i = (-1*((criticalRegion-1)/2)); i <= criticalRegion/2; i++)
-	{
-		for (int j = (-1 * ((criticalRegion - 1) / 2)); j <= criticalRegion / 2; j++)
-		{			
-			int idx = structure.TranslateFromXYToIdx(i, j);
-			if (idx > -1 && idx < structsize)
-			{
-				const Element& e = structure.composition[idx];
-				if (e.red != 0)
-				{
-					ret.red += e.red;
-					ret.blue += e.blue;
-					ret.green += e.green;
-				}
-			}			
-		}
-	}
-	return ret;
-}
+//Element Organelle::GetCriticalCharge()
+//{
+//	Element ret = Element();
+//	int structsize = structure.composition.size();
+//	if (structsize < criticalRegion*criticalRegion)
+//	{
+//		ret.red = -1;
+//		return ret;
+//	}
+//	for (int i = (-1*((criticalRegion-1)/2)); i <= criticalRegion/2; i++)
+//	{
+//		for (int j = (-1 * ((criticalRegion - 1) / 2)); j <= criticalRegion / 2; j++)
+//		{			
+//			int idx = structure.TranslateFromXYToIdx(i, j);
+//			if (idx > -1 && idx < structsize)
+//			{
+//				const Element& e = structure.composition[idx];
+//				if (e.red != 0)
+//				{
+//					ret.red += e.red;
+//					ret.blue += e.blue;
+//					ret.green += e.green;
+//				}
+//			}			
+//		}
+//	}
+//	return ret;
+//}
 
 void Organelle::CheckConnectionDeath(std::list<Organelle*>& border)
 {
@@ -507,6 +675,60 @@ void Organelle::GetImmediateFamily(std::list<Organelle*>& retList)
 		retList.push_back(o);
 	}
 }
+
+
+
+
+
+
+bool Organelle::ContainsReactant()
+{
+	return innerSolution.size() != 0;
+}
+
+int Organelle::GetReactantKey()
+{
+	return rand() % innerSolution.size();
+}
+
+Compound* Organelle::GetReactantWithKey(int key)
+{
+	return innerSolution[key];
+}
+
+void Organelle::ResolveSituation(int key)
+{
+	/*if (key != -1)
+	{
+		if (innerSolution[key]->mass == 0 || numpieces != 1)
+		{
+			delete innerSolution[key];
+			FastDelete(innerSolution, key);
+		}
+	}
+	for (int i = 0; i < numpieces; i++)
+	{
+		Compound* newComp = new Compound();
+		*newComp = pieces[i];
+		innerSolution.emplace_back(newComp);
+	}*/
+	if (innerSolution[key]->elementCount == 0)
+	{
+		delete innerSolution[key];
+		FastDelete(innerSolution, key);
+	}
+}
+
+void Organelle::AddCompoundToRandomLocationInSolution(Compound* c)
+{
+	innerSolution.emplace_back(c);
+}
+
+
+
+
+
+
 
 bool Organelle::CheckRep()
 {

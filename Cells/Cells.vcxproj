@@ -182,6 +182,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cells.h" />
+    <ClInclude Include="Chromosome.h" />
     <ClInclude Include="Compound.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="Element.h" />
@@ -208,6 +209,7 @@
     <Text Include="ravings1.txt" />
     <Text Include="ravings2.txt" />
     <Text Include="ravings3.txt" />
+    <Text Include="ravings4.txt" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="8514oem.fon">

@@ -52,7 +52,7 @@ void DoEntropy(int secIdx)
 		//sometimes, give an energy boost
 		if (rand() % 125 == 0)
 		{
-			c->internalEnergy += 250;
+			//c->internalEnergy += 250;
 		}
 		Universe::worldHexes[xpos + ypos * Universe::numxsectors].AddCompoundToLocationInSolution(c, solutionx + solutiony*5);
 		//s.AddCompoundToRandomLocationInSolution(c);
@@ -82,7 +82,7 @@ void DoEntropy(int secIdx)
 		//sometimes, put it in a new spot, and give it a boost of energy
 		if (rand()%500 == 0)
 		{
-			c->internalEnergy += 300;
+			//c->internalEnergy += 300;
 			if ((rand() % 50) == 0)
 			{
 				xReturnSpot += xVelocity;

@@ -10,8 +10,13 @@ int ypan = 0;
 
 int refresh = 10;
 
+
 void DisplayAll(sf::RenderWindow &window) 
 {
+    sf::Font font;
+    font.loadFromFile("arial.ttf");
+    sf::Text txt;
+    txt.setFont(font);
 
     sf::Vector2i position = sf::Mouse::getPosition();
     position = position - window.getPosition();
@@ -134,27 +139,32 @@ void DisplayAll(sf::RenderWindow &window)
         {
             if (c != nullptr)
             {
+                c->CalculateProduct();
                 sf::RectangleShape comp(sf::Vector2f(40.f / zoom, 40.f / zoom));
-                //comp.setFillColor(c->GetColor());
+                comp.setFillColor(c->GetColor());
 
-                sf::Color ret = sf::Color::Black;
+                /*sf::Color ret = sf::Color::Black;
                 ret.r += c->internalEnergy/10;
                 ret.b += c->internalEnergy/10;
-                comp.setFillColor(ret);
-
+                comp.setFillColor(ret);*/
 
                 comp.setPosition(10 / zoom + staticXOffset + xpos + (j % 5) * 60 / zoom, 10 / zoom + staticYOffset + ypos + (j / 5) * 60 / zoom);
                 window.draw(comp);
+
+                txt.setString(std::to_string(c->product));
+                txt.setCharacterSize(45 / zoom);
+                txt.setPosition(10 / zoom + staticXOffset + xpos + (j % 5) * 60 / zoom, staticYOffset + ypos + (j / 5) * 60 / zoom);
+                //txt.setOrigin(size() * 0.9 / zoom, size() * 0.9 / zoom);
+                txt.setOrigin(0.9 / zoom, 0.9 / zoom);
+                txt.setFillColor(sf::Color::Blue);
+                window.draw(txt);
             }
             j++;
         }
     }
-    for (Organism* o : Universe::allLife)
+    for (Organelle* o : Universe::allLife)
     {
-        for (Organelle* oo : o->AllOrganelles)
-        {
-            oo->Display(window, zoom, staticXOffset, staticYOffset);
-        }
+        o->Display(window, zoom, staticXOffset, staticYOffset);
     }
     window.display();
 }

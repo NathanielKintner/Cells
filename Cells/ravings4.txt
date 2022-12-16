@@ -1,0 +1,149 @@
+Maybe time for a hard reset. Hard-ish, anyway.
+
+
+I keep having vague ideas and then not implementing anything, I think because I've built so much and it's so entrenched. It's very hard to change this very complicated system, and it's exhausting to think about.
+
+The end product will also be exhausting, it's going to be very complex no matter what I do, I think. I just... want a lot.
+
+But, it's hard to move in a new direction when you have concrete blocks made of legacy code glued to your feet.
+
+DNA maybe needs a fundamental overhaul. Marker nodes, places to "start" and "stop", to make calculation more flexible.
+
+Buuuut then again if we have to access this shit all the time aren't we going to end up doing a bunch of O(n) that could be O(1)?
+
+Idk. Idk idk. Thats the whole problem, theres too much I don't know. I don't know what's most important. I don't have a damn sounding board.
+
+
+
+want:
+	random small changes in code consistently produce SMALL CHANGES in output
+	the potential for re-use or pattern forming
+
+	we need to stop creating pre-formed organisms. Things have to be created one organelle at a time.
+
+	Less jumping around. More... idk. Having defined sections that make consistent results.
+
+	It's expensive to do insertions. So... lets not?
+
+	Its chaotic to do indexing based on values at a location. Can we not?
+
+	If we don't jump from location to location we need to basically read from left to right, I think.
+	Making very small jumps doesn't work, because you'll end up on an incorrect path.
+
+
+
+building the framework is the primary goal, anything after that is just observagtional.
+
+In order to maximize uitility, we want as much emergent complexity as possible.
+
+Modeling this after real bio is beneficial in the sense that we know that there is some system in which it functions, and therfore it is more plausible that we could create a system of our own that works in a similar fashion.
+
+However, becoming too entrenched in ideas that are strictly IRL bio runs the risk of overcomplicating or causing friction for the current system.
+
+We need, for the sake of aesthetic satisfaction, something better than hardcoded functionality with on/off switches. That much is clear.
+
+It does need, in theory, to be able to parallel a lot of irl systems gor the same reason. I want a mirror.
+
+Environment+behavior+genetic code
+
+
+In order to prevent the excess clunkiness caused by needing to seperately produce and encapsulate DNA to create a new organism, we will include an option to "read the DNA, create an organelle that corresponds to it's internals, and also create a copy of this DNA inside of it"
+
+this works only for single-chromosome organisms, and may cause a lot of organism to be single-chromosome for a long time. I think this is probably just fine, though.
+
+The options we need:
+
+Create copy of DNA
+Read DNA and make organelle
+Read DNA and make organelle with DNA copy inside of it
+Make a DNA copy
+Read DNA and make chemical?
+
+Do this inside the current organelle
+Do this outside the current organelle
+Do this outside the current organelle, and connect it to the organelle
+
+
+
+Questions:
+How do we do neural net/organelle decision making?
+How do we prevent DNA from taking up too much memory?
+How do we avoid needing to constantly read DNA (this is expensive!)?
+
+Two of these are optimization! Let's not worry about this yet
+
+We also have ideas for the world, but we don't need to implement them yet.
+
+We are just doing organelle generation right now. Organelles and DNA. And decision making.
+
+An organelle can easily create its own neural net on creation, and then just read that. This makes macro-behavior hard, however.
+
+What's maybe better is to have each organelle have inputs and outputs, with input and output channels. If you're connected to another organelle, you can read its outputs.
+
+reading dna defines your internal nodes. Each organelle is an input layer, an output layer, and nodes. They each have a mini-net. Small number of nodes.
+
+When something attaches, it can affect the behavior of what it attaches to. This could potentially allow for mind-control viruses, but evolving away from susceptibility to this is also possible.
+
+The virus would also have to find the right location to lock on to!!! Similar to irl.
+
+Single-celled organisms could create 'memory' by changing the composition of their internal solution? Maybe?
+
+Overall this can happen very fast. I think this is good.
+
+....What order will they activate in? That's relevant.
+
+We could have all of them read, and then have all of them write/act. That makes a certain amount of sense. It's very reliable.
+
+I like this. :3
+
+
+Ok. What do cells do?
+
+-Make a connection
+-Break a connection
+-Read DNA/synthesize something
+...Move???? ugh. Idk.
+Random floating and brownian motion has been good enough for a lot of things thus far.
+I'd rather if movement evolved. Therefore: 
+-Increase or decrease "intertia"
+-Increase or decrease "desired" distance from connected entity.
+-Pull a connected something inside, if it is smaller than you are
+-Spit out something that is inside, either with or without a connection
+
+
+
+
+
+
+Ok.
+
+We have a plan of action for 
+-what we want the organelle creation to look like
+-what we want reproduction to look like
+-what we want decision-making to look like
+
+
+Now we need to put that information into a code.
+
+
+We aren't building this from chemistry up, which I think is a good thing. 
+
+
+Mod numbers are still useful for randomly deciding things like inside vs outside and connected vs not
+We could have a pre-defined number of nodes in the net, which might make it run faster.
+A read-all-then-write-all approach allows us to have well-defined cyclic relationships in the nodes.
+We can have everything build as a look-back
+All nodes+outputs look backwards at their inputs, and write down what they see
+Then, they all do math and adjust their output number.
+
+We can also... maybe... just build cells as a collection of booleans....??? 
+
+The BIG thing is.. I think.... defining where cells look to read their DNA. 
+And making sure they all have 'markers', and that the DNA does too
+
+
+
+
+
+
+

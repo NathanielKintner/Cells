@@ -3,6 +3,7 @@
 #include "Utilities.h"
 #include "Compound.h"
 #include "ReactionSpace.h"
+#include "Organelle.h"
 
 
 
@@ -13,9 +14,10 @@ public:
 	bool ContainsReactant();
 	int GetReactantKey();
 	Compound* GetReactantWithKey(int key);
-	void ResolveSituation(Compound pieces[], int numpieces, int key);
+	void ResolveSituation(int key);
 	Compound* solution[25];
 	std::vector<int> filledIdxs;
+	std::vector<Organelle*> localPopulation;
 	void AddCompoundToLocationInSolution(Compound * c, int location);
 	void AddCompoundToRandomLocationInSolution(Compound* c);
 

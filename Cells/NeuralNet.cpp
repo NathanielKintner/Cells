@@ -47,8 +47,12 @@ void NeuralNet::RunNet()
 
 void NeuralNet::ConvertCharToNNIndices(unsigned char idxCode, int& idx1, int& idx2)
 {
+	//fb nathaniel here
+	//this appears to be 'splitting' the input into two parts, such that any character that is input here
+	//will actually translate to TWO locations on the input and output layers, allowing char-sized numbers
+	//to freely index different locations in a less-than-char-sized input layer
 	idx1 = idxCode % NN_LAYER_WIDTH;
-	idx2 = idxCode / NN_LAYER_WIDTH;
+	idx2 = (idxCode / NN_LAYER_WIDTH) % NN_LAYER_WIDTH;
 }
 
 
