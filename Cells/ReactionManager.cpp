@@ -262,6 +262,29 @@
 //    return ret;
 //}
 
+//used to create new organelles, fix structures, synthesize specific compounds, destroy our enemies, etc
+//remember that the internal energy of takefrom and giveto already increase the threshold!
+//also, if a positive threshold is given, then the total internal energy of the system could be negative
+//(the excess negative energy will be put on giveto)
+bool RipAwaySpecifiedElements(Compound* takefrom, Compound* giveto, Compound* targetelements, int& instabilityChangeInCompoundTakenFrom, int& instabilityChangeInCompoundGivenTo, int threshold)
+{
+    Compound diff;
+    for (int i = 0; i < 4; i++)
+    {
+        //branchles statement reads:
+        //if takefrom has at least as many of element i as is being targeted, then diff[i] is set to the target amount
+        //if takefrom has less than the number element i as is being targeted, then diff[i] is set to the amount available
+        diff.elements[i] = targetelements->elements[i] * (takefrom->elements[i] >= targetelements->elements[i]) 
+                               + takefrom->elements[i] * (takefrom->elements[i] < targetelements->elements[i]);
+    }
+    bool didreaction = PerformReactionIfGoodEnough(takefrom, giveto, &diff, threshold, instabilityChangeInCompoundTakenFrom, instabilityChangeInCompoundGivenTo);
+
+    if (didreaction)
+    {
+        AdjustEnergyValues(takefrom, giveto, instabilityChangeInCompoundTakenFrom, instabilityChangeInCompoundGivenTo);
+    }
+    return didreaction;
+}
 
 bool RandomlyReactInSolution(ReactionSpace& rs, int threshold)
 {
@@ -318,19 +341,22 @@ bool RandomlyReactInSolution(ReactionSpace& rs, int threshold)
 }
 //as instability decreases, energy increases
 //if something would have negative energy as a result of this, move energy from the other one to balance it out
+//if there is not enough energy in the system, leave the excess negative energy on c2 (this must be dealt with!!)
 void AdjustEnergyValues(Compound* c1, Compound* c2, int& c1instabilityChange, int& c2instabilityChange)
 {
     c1->internalEnergy -= c1instabilityChange;
     c2->internalEnergy -= c2instabilityChange;
+    //if c2 is negative, move energy from c1 until c2 is at 0
+    if (c2->internalEnergy < 0)
+    {
+        c1->internalEnergy += c2->internalEnergy;
+        c2->internalEnergy = 0;
+    }
+    //if c1 is negative, move energy from c2 until c1 is at 0
     if (c1->internalEnergy < 0)
     {
         c2->internalEnergy += c1->internalEnergy;
         c1->internalEnergy = 0;
-    }
-    else if (c2->internalEnergy < 0)
-    {
-        c1->internalEnergy += c2->internalEnergy;
-        c2->internalEnergy = 0;
     }
 }
 
@@ -352,7 +378,7 @@ void CreateRandomReactantGroup(Compound* c1, Compound* diff)
     {
         for (int i = 0; i < 4; i++)
         {
-            diff->elements[i] = rand() % (c1->elements[i] + 1);
+            diff->elements[i] = rand() % (c1->elements[i] + 1) % 2;
         }
         diff->CalculateSum();
     } while (diff->sum == 0);

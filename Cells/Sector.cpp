@@ -35,22 +35,44 @@ bool Sector::ContainsReactant()
 
 int Sector::GetReactantKey()
 {
-	return rand() % filledIdxs.size();
+	return rand() % (filledIdxs.size() + localPopulation.vec.size());
+	//return rand() % (filledIdxs.size());
 }
 
 Compound* Sector::GetReactantWithKey(int key)
 {
-	return solution[filledIdxs[key]];
+	size_t innersolutionsize = filledIdxs.size();
+	if (key >= innersolutionsize)
+	{
+		return &((localPopulation.vec[key - innersolutionsize])->structure);
+	}
+	else
+	{
+		return solution[filledIdxs[key]];
+	}
 }
 
 void Sector::ResolveSituation(int key)
 {
-	int solutionLocation = filledIdxs[key];
-	if (solution[solutionLocation]->elementCount == 0)
+	size_t innersolutionsize = filledIdxs.size();
+	if (key >= innersolutionsize)
 	{
-		Compound* removedComp = RemoveCompoundByIdxInList(key);
-		delete removedComp;
+		if ((localPopulation.vec[key - innersolutionsize])->structure.elementCount == 0)
+		{
+			(localPopulation.vec[key - innersolutionsize])->DoDeath();
+		//FastDelete(localPopulation, key - innersolutionsize);
+		}
 	}
+	else
+	{
+		int solutionLocation = filledIdxs[key];
+		if (solution[solutionLocation]->elementCount == 0)
+		{
+			Compound* removedComp = RemoveCompoundByIdxInList(key);
+			delete removedComp;
+		}
+	}
+	
 }
 
 //WARNING: this idx is an index in filledIdxs

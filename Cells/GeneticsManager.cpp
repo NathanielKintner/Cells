@@ -25,12 +25,34 @@ void MutateChromosome(Chromosome* chr)
 	}
 }
 
+Compound ParseCompoundFromGeneticCode(Chromosome* chr, unsigned char location)
+{
+	Compound ret;
+	int idx = 0;
+	do
+	{
+		ret = Compound((unsigned char)chr->dna[(location + idx) % 256]);
+		ret.CalculateSum();
+		idx++;
+	} while (ret.sum == 0);
+	return ret;
+}
+
 Organelle* CreateOrganelle(Chromosome* chr, unsigned char location)
 {
 	//pointer to new organelle
 	Organelle* ret = new Organelle;
 
+	//create cursor
 	int idx = 0;
+
+	//structure
+	//this is the compound that the organelle is made out of
+	//the elements contained in this structure must be present inside the 'parent' organelle that is generating this one	
+	
+	ret->structure = ParseCompoundFromGeneticCode(chr, location);
+
+	//random metadata, used *wherever* (may deprecate)
 	ret->metaData1 = chr->dna[(location + idx) % 256];
 	idx++;
 	ret->metaData2 = chr->dna[(location + idx) % 256];
@@ -40,37 +62,60 @@ Organelle* CreateOrganelle(Chromosome* chr, unsigned char location)
 	ret->metaData4 = chr->dna[(location + idx) % 256];
 	idx++;
 
+	//neural net
+
+	//channels where messages are received (NN inputs we populate based on our connections' outputs) 
 	for (int i = 0; i < NUM_COMMUNICATION_CHANNELS; i++)
 	{
-		ret->communication_channels[i] = chr->dna[(location + idx) % 256];
+		ret->communication_inputs[i] = chr->dna[(location + idx) % 256];
+		idx++;
+	}
+	//channels where messages are sent (NN outputs we use when populating our connections' inputs) 
+	for (int i = 0; i < NUM_COMMUNICATION_CHANNELS; i++)
+	{
+		ret->communication_outputs[i] = chr->dna[(location + idx) % 256];
 		idx++;
 	}
 
+	//channels we read from when deciding what to do
 	for (int i = 0; i < NUM_ACTIVATION_OPTIONS; i++)
 	{
 		ret->activation_channels[i] = chr->dna[(location + idx) % 256];
 		idx++;
 	}
-
+	//the location on our DNA we look when trying to execute one of the activation channels
 	for (int i = 0; i < NUM_ACTIVATION_OPTIONS; i++)
 	{
 		ret->activation_locations[i] = chr->dna[(location + idx) % 256];
 		idx++;
 	}
-
+	//all the connections inside the neural net 
+	//(theres a bunch, equal to depth * width * connections-per-node)
 	for (int i = 0; i < NN_TOTAL_SIZE; i++)
 	{
 		ret->Brain.netLayers[i] = chr->dna[(location + idx) % 256];
 		idx++;
 	}
+	
+	//critical region, determines whether we have fallen apart and died
+	//note that there is no guarantee that the critical region will fit with the organelles structure
+	//this can result in insta-death, unless an immideate and precise chemical reaction occurrs
+	char crit1 = chr->dna[(location + idx) % 256];
+	char crit2 = chr->dna[(location + idx + 1) % 256];
+	ret->criticalRegion = Compound(crit1, crit2);
+	idx += 2;
 
+	//mask that the membrane uses to determine what compounds can enter or exit due to passive diffusion.
+	//different masks allow different compounds. this mask can be changed, which alters the
+	//semi-permeability of the organelle's membrane
+	char mask1 = chr->dna[(location + idx) % 256];
+	char mask2 = chr->dna[(location + idx + 1) % 256];
+	ret->membraneMask = Compound(mask1, mask2);
+	idx += 2;
 
-
-	//      structure  critical region
-	//ret->init(orgComp, parts[partIdx + 1] % 3 + 2);
-	ret->tempinit();
 	ret->geneticCode = *chr;
 	//init called last to allow the organelle to access its metadata before deciding how to initialize
+	ret->init();
 	return ret;
 }
 

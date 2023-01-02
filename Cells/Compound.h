@@ -20,8 +20,45 @@ public:
         mass = 0;
         internalEnergy = 0;
     };
+    Compound(unsigned char code)
+    {
+        Vvert = 0;
+        Vhoriz = 0;
+        mass = 0;
+        internalEnergy = 0;
+        //initialize composition to random values between 0 and 3 (inclusive) for each element
+        elements[0] = code % 4;//first and second bits
+        elements[1] = (code >> 2) % 4;//third and fourth bits
+        elements[2] = (code >> 4) % 4;//fifth and sixth bits
+        elements[3] = code >> 6;//seventh and eigth bits
+    };
+    //generally used to make 'masks' for calculating fit scores
+    Compound(unsigned char code1, unsigned char code2)
+    {
+        Vvert = 0;
+        Vhoriz = 0;
+        mass = 0;
+        internalEnergy = 0;
+        //initialize composition to random values between 0 and 7 (inclusive) for each element, then subtract 3
+        //this gives us a range from -3 to +4, including 0.
+        //each value specifies a range of possible values that will not increase the return the value of CalculateFitScore:
+        //-3: no less than 3, no more than 7
+        //-2: no less than 2, no more than 6
+        //-1: no less than 1, no more than 5
+        // 0: no more than 4
+        // 1: no more than 3
+        // 2: no more than 2
+        // 3: no more than 1
+        // 4: no more than 0 (cannot include this element)
+        elements[0] = (code1 % 8) - 3;//first -> 4th bits
+        elements[1] = ((code1 >> 4) % 8) - 3;//third and fourth bits
+        elements[2] = (code2 % 8) - 3;//fifth and sixth bits
+        elements[3] = ((code2 >> 4) % 8) - 3;//seventh and eigth bits
+    };
     void CalculateSum();
     void CalculateProduct();
+    void FindDifference(Compound* tocomparewith, Compound* ret);
+    char CalculateFitScore(Compound* c);
 
     int id;
     //Compound()

@@ -22,6 +22,11 @@ void DoEntropy(int secIdx)
 		int delidx = rand() % s.filledIdxs.size();
 		int solutionLocation = s.filledIdxs[delidx];
 		Compound * c = s.RemoveCompoundByIdxInList(delidx);
+		if (s.filledIdxs.size() > 10)
+		{
+			delete c;
+			return;
+		}
 		int solutionx = solutionLocation % 5;
 		int solutiony = solutionLocation / 5;
 		solutionx += rand() % 3 - 1;

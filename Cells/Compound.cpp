@@ -3,7 +3,7 @@
 
 int Compound::GetTotalInstability()
 {
-	return sum % 2 + sum % 3 + sum % 5 + sum % 7 + elementCount - (5 * (elementCount != 0)) + (2 * elementCount * (elementCount > 10));
+	return sum % 2 + sum % 3 + sum % 5 + sum % 7 + elementCount - (5 * (elementCount != 0)) + (2 * elementCount * (elementCount > 10)) + ((elementCount / 4) * ((elementCount-2)/4) * (elementCount > 1));
 }
 
 int Compound::GetActivationInstability()
@@ -38,7 +38,66 @@ void Compound::CalculateProduct()
 	}
 }
 
+//finds the difference between two compounds, i.e. what needs to be added or subtracted to make them the same
+void Compound::FindDifference(Compound * tocomparewith, Compound * ret)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		ret->elements[i] = elements[i] - tocomparewith->elements[i];
+	}
+}
 
+char Compound::CalculateFitScore(Compound* c)
+{
+	//add together the counts of each element. If the result is less than 0 or more than 4, add 1 to the output
+	//examples:
+	//2 1 2 4
+	//2 1 3 0
+	//4 2 5 4
+	//0 0 1 0
+	//score = 1
+
+	//2 1 2 4
+	//2 1 2 0
+	//4 2 4 4
+	//0 0 0 0
+	//score = 0
+
+	//2 1 2 4
+	//3 3 3 3
+	//5 4 5 7
+	//1 0 1 1
+	//score = 3
+
+	// 2  1 2 4
+	//-2 -2 0 1
+	// 0 -1 2 5
+	// 0  1 0 1
+	//score = 2
+
+	//in general, higher score means a worse fit.
+	//negative values will only be used in 'masks' that are designed to limit the acceptable values for a compound
+	//comparing two actual compounds this way will return a better (lower) score if they do not have similar
+	//element compositions, and are not very large
+	//very large compounds will not fit well with anything (anything with more than 4 of each element
+	//always returns 4 when fitted with another element)
+	//for negative values, the idea is that the value of the element in the compound must be higher than the elements in the mask
+	//it will start to fail again if it is 5 higher than the magnitude of the negative number, e.g.
+
+	// 2  1  7  6
+	//-2 -2 -2 -2
+	// 0 -1  5  4
+	// 0  1  1  0
+	//score = 2
+
+	//written this way to be branchless and avoid for-loop overhead
+	char e1 = elements[0] + c->elements[0];
+	char e2 = elements[1] + c->elements[1];
+	char e3 = elements[2] + c->elements[2];
+	char e4 = elements[3] + c->elements[3];
+	//return (e1 > 4) + (e1 < 0) + (e2 > 4) + (e2 < 0) + (e3 > 4) + (e3 < 0) + (e4 > 4) + (e4 < 0);
+	return (e1 > 6) + (e1 < -2) + (e2 > 6) + (e2 < -2) + (e3 > 6) + (e3 < -2) + (e4 > 6) + (e4 < -2);
+}
 
 
 

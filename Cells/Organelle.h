@@ -27,32 +27,35 @@ public:
 
 	int age = 0;
 
-	int energy = 50;
 
-	Organelle* outerMembrane;
-	unsigned char outerMembraneConnectionMetadata;
-	std::vector<Organelle*> innerOrganelles;
+	ConnectionNode<Organelle*, Sector*> localArea;
+
+	ConnectionNode<Organelle*, Organelle*> outerMembrane;
+	ConnectionNode<Organelle*, Organelle*> innerOrganelles;
 	std::vector<Compound*> innerSolution;
 	Compound idealArrangement;
 
 	NeuralNet Brain;
 	#define NUM_COMMUNICATION_CHANNELS 4
-	unsigned char communication_channels[NUM_COMMUNICATION_CHANNELS];
+	unsigned char communication_inputs[NUM_COMMUNICATION_CHANNELS];
+	unsigned char communication_outputs[NUM_COMMUNICATION_CHANNELS];
 	#define NUM_ACTIVATION_OPTIONS 5
 	unsigned char activation_channels[NUM_ACTIVATION_OPTIONS];
 	unsigned char activation_locations[NUM_ACTIVATION_OPTIONS];
 
 	Compound structure;
-	std::list<Compound> complete;
-	int criticalRegion;
+	Compound criticalRegion;
+	Compound membraneMask;
+	Compound productInProgress = Compound();
+	//std::list<Compound> complete;
 	char UtilityMarker = 0;
 	unsigned char isded = 0;
 	unsigned char metaData1;
 	unsigned char metaData2;
 	unsigned char metaData3;
 	unsigned char metaData4;
-	void ConnectTo(Organelle* o);
-	void SeverAllConnections();
+	//void ConnectTo(Organelle* o);
+	//void SeverAllConnections();
 	void GetImmediateFamily(std::list<Organelle*>& retList);
 	void MakePresenceKnown();
 	void SendRepositionRequests();
@@ -65,14 +68,18 @@ public:
 	int size();
 	bool IsAlive();
 	int AlivenessPercentageGuess();
+	void DoDeath();
+	void DoDiffusion();
+	void SetPosition(int x, int y);
 	//Element GetCriticalCharge();
-	void init(Compound struc, int crit);
+	//void init(Compound struc, int crit);
+	void init();
 
-	void tempinit();
+	//void tempinit();
 	int mass();
 
 	void DoChemistry(std::vector<Compound*>& reactants);
-	void CheckConnectionDeath(std::list<Organelle*>& border);
+	//void CheckConnectionDeath(std::list<Organelle*>& border);
 
 
 	//ReactionSpace Interface
@@ -83,8 +90,9 @@ public:
 	void AddCompoundToRandomLocationInSolution(Compound* c);
 
 	//ideally, this would be protected, but im running into implementation issues so we'll do it later
-	void UpdateConnectionMetaData(unsigned char MetadataToFindEntry, unsigned char MetadataToChangeEntryTo);
-	std::vector<Organelle*> connections;
+	//void UpdateConnectionMetaData(unsigned char MetadataToFindEntry, unsigned char MetadataToChangeEntryTo);
+	//std::vector<Organelle*> connections;
+	ConnectionNode<Organelle*,Organelle*> connections;
 	bool CheckRep();
 	~Organelle() {/* stuff */ }
 protected:
@@ -97,8 +105,8 @@ protected:
 	/// the metadata this organelle should send o when it wants to disconnect
 	/// <returns></returns>
 	/// an error code or 0, do not connect if ret != 0
-	virtual char ConnectOneWay(Organelle* o, unsigned char& Metadata);	
-	virtual void DisconnectOneWay(unsigned char Metadata);
+	//virtual char ConnectOneWay(Organelle* o, unsigned char& Metadata);	
+	//virtual void DisconnectOneWay(unsigned char Metadata);
 	std::vector<unsigned char> connectionMetaData;
 	Element CriticalIdentity;
 };

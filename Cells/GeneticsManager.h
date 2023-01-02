@@ -18,6 +18,7 @@
 void RandomizeChromosome(Chromosome* chr);
 void CopyChromosome(Chromosome* copyfrom, Chromosome* copyto);
 void MutateChromosome(Chromosome* chr);
+Compound ParseCompoundFromGeneticCode(Chromosome* chr, unsigned char location);
 Organelle* CreateOrganelle(Chromosome* chr, unsigned char location);
 
 

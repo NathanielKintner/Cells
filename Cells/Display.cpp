@@ -22,54 +22,10 @@ void DisplayAll(sf::RenderWindow &window)
     position = position - window.getPosition();
     sf::Event event;
     int polls = 0;
-    while (window.pollEvent(event))
-    {
-        polls++;
-        if (polls > 5)
-        {
-            break;
-        }
-        if (event.type == sf::Event::Closed)
-            window.close();
-        double percentageXAcross = (xpan - position.x) * 1.0 / (Universe::numxsectors * 320 / zoom);
-        double percentageYAcross = (ypan - position.y) * 1.0 / (Universe::numysectors * 320 / zoom);
-        std::cout << percentageXAcross << ", " << percentageYAcross << std::endl;
-        if (event.type == sf::Event::MouseWheelMoved)
-        {
-            zoom -= event.mouseWheel.delta;
-            if (zoom > 10)
-            {
-                zoom = 10;
-                if (refresh < 10)
-                {
-                    refresh++;
-                }
-                else if (refresh < 1000)
-                {
-                    refresh += 100;
-                }
-                std::cout << "refresh set to " << refresh << std::endl;
-            }
-            if (zoom < 3)
-            {
-                zoom = 3;
-                if (refresh > 19)
-                {
-                    refresh -= 100;
-                }
-                else if (refresh > 1)
-                {
-                    refresh--;
-                }
-                std::cout << "refresh set to " << refresh << std::endl;
-            }
-            xpan = (int)(percentageXAcross * (Universe::numxsectors * 320 / zoom)) + position.x;
-            ypan = (int)(percentageYAcross * (Universe::numysectors * 320 / zoom)) + position.y;
-        }
-    }
-
 
     window.clear();
+
+
 
 
     if (position.x > -25 && position.y > -25 && position.x < window.getSize().x + 25 && position.y < window.getSize().y + 25)
@@ -118,9 +74,9 @@ void DisplayAll(sf::RenderWindow &window)
     int staticYOffset = ypan;
     for (int i = 0; i < Universe::numxsectors * Universe::numysectors; i++)
     {
-        int xpos = i % Universe::numxsectors * 320/zoom;
-        int ypos = i / Universe::numxsectors * 320/zoom;
-        sf::RectangleShape sect(sf::Vector2f(300.f/zoom, 300.f/zoom));
+        int xpos = i % Universe::numxsectors * 320 / zoom;
+        int ypos = i / Universe::numxsectors * 320 / zoom;
+        sf::RectangleShape sect(sf::Vector2f(300.f / zoom, 300.f / zoom));
         sect.setPosition(staticXOffset + xpos, staticYOffset + ypos);
         window.draw(sect);
         //for (int j = 0; j < 25; j++)
@@ -135,7 +91,7 @@ void DisplayAll(sf::RenderWindow &window)
         //    window.draw(comp);
         //}
         int j = 0;
-        for (Compound * c : Universe::worldHexes[i].solution)
+        for (Compound* c : Universe::worldHexes[i].solution)
         {
             if (c != nullptr)
             {
@@ -157,11 +113,79 @@ void DisplayAll(sf::RenderWindow &window)
                 //txt.setOrigin(size() * 0.9 / zoom, size() * 0.9 / zoom);
                 txt.setOrigin(0.9 / zoom, 0.9 / zoom);
                 txt.setFillColor(sf::Color::Blue);
-                window.draw(txt);
+                //window.draw(txt);
             }
             j++;
         }
     }
+
+    while (window.pollEvent(event))
+    {
+        polls++;
+        if (polls > 5)
+        {
+            break;
+        }
+        if (event.type == sf::Event::Closed)
+            window.close();
+        double percentageXAcross = (xpan - position.x) * 1.0 / (Universe::numxsectors * 320 / zoom);
+        double percentageYAcross = (ypan - position.y) * 1.0 / (Universe::numysectors * 320 / zoom);
+        std::cout << percentageXAcross << ", " << percentageYAcross << std::endl;
+        if (event.type == sf::Event::MouseWheelMoved)
+        {
+            zoom -= event.mouseWheel.delta;
+            if (zoom > 10)
+            {
+                zoom = 10;
+                if (refresh < 10)
+                {
+                    refresh++;
+                }
+                else if (refresh < 1000)
+                {
+                    refresh += 100;
+                }
+                std::cout << "refresh set to " << refresh << std::endl;
+            }
+            if (zoom < 3)
+            {
+                zoom = 3;
+                if (refresh > 19)
+                {
+                    refresh -= 100;
+                }
+                else if (refresh > 1)
+                {
+                    refresh--;
+                }
+                std::cout << "refresh set to " << refresh << std::endl;
+            }
+            xpan = (int)(percentageXAcross * (Universe::numxsectors * 320 / zoom)) + position.x;
+            ypan = (int)(percentageYAcross * (Universe::numysectors * 320 / zoom)) + position.y;
+        }
+        if (event.type == sf::Event::MouseButtonPressed)
+        {
+            sf::CircleShape drawOrg(50 / zoom, 20);
+            drawOrg.setFillColor(sf::Color(0, 0, 0, 0));
+            drawOrg.setOutlineThickness(100.0 / zoom);
+            drawOrg.setOutlineColor(sf::Color(0, 0, 255, 255));
+            drawOrg.setPosition((position.x), (position.y));
+            window.draw(drawOrg);
+            //rounding error hell, multiplying by 1.0 is VERY IMPORTANT
+            int sectorsXAcross = (int)((xpan - position.x+8) * 1.0 / (320.0 / zoom) * -1);
+            int sectorsYAcross = (int)((ypan - position.y+28+8) * 1.0 / (320.0 / zoom) * -1);
+
+            int xPositionOnMap = (int)((xpan - position.x + 8) * 1.0 / (1.0 / zoom) * -1);
+            int yPositionOnMap = (int)((ypan - position.y + 28 + 8) * 1.0 / (1.0 / zoom) * -1);
+
+            std::cout << sectorsXAcross << ", " << sectorsYAcross << std::endl;
+        }
+    }
+
+
+
+
+
     for (Organelle* o : Universe::allLife)
     {
         o->Display(window, zoom, staticXOffset, staticYOffset);

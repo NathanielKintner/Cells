@@ -18,11 +18,13 @@ int main()
 
 int runSim()
 {
-    srand(46);
+    //srand(46);
     //srand(42);
+    srand(40);
     //srand(time(NULL));
     //Grids::InitGrids(65, 65);
-    Grids::InitGrids(25, 25);
+    //Grids::InitGrids(25, 25);
+    Universe::init(25, 25);
     
     Element e;
     e.red = 1;
@@ -104,8 +106,8 @@ int runSim()
     start = std::clock();
 
 
-    for (int i = 0; i < 20000000; i++) //6.661 secs benchmark, debugging seems to take 140X longer or so (oof) //more recently, 9.928
-    //for (int i = 0; i < 20000; i++)
+    //for (int i = 0; i < 20000000; i++) //6.661 secs benchmark, debugging seems to take 140X longer or so (oof) //more recently, 9.928
+    for (int i = 0; i < 20000; i++)
     {
         //std::cout << i << "\n";
         std::vector<Compound*> asdf;
@@ -270,10 +272,30 @@ int runSim()
                         biginstability += c->GetTotalInstability();
                         if (c->sum <= 0 || c->elements[0] < 0 || c->elements[1] < 0 || c->elements[2] < 0 || c->elements[3] < 0 || c->internalEnergy < 0)
                         {
-                            std::cout << "FUCK" << std::endl;
+                            std::cout << "compound malformed" << std::endl;
+                        }
+                        if (c->elementCount > 75)
+                        {
+                            std::cout << "large compound" << std::endl;
                         }
                         c = c->StackedCompound;
                     } while (c != nullptr);
+                }
+            }
+            for (Organelle* o : Universe::allLife)
+            {
+                o->structure.CalculateSum();
+                bigsum += o->structure.sum;
+                bigcount += 1;
+                bigenergy += o->structure.internalEnergy;
+                biginstability += o->structure.GetTotalInstability();
+                for (Compound* c : o->innerSolution)
+                {
+                    c->CalculateSum();
+                    bigsum += c->sum;
+                    bigcount += 1;
+                    bigenergy += c->internalEnergy;
+                    biginstability += c->GetTotalInstability();
                 }
             }
             std::cout << "Element sum: " << bigsum << std::endl;
@@ -282,6 +304,23 @@ int runSim()
             std::cout << "Total instability: " << biginstability << std::endl;
             std::cout << "Thermodynamic sum: " << bigenergy + biginstability << std::endl;
         }
+
+
+
+        for (int i = 0; i < Universe::allLife.size();)
+        {
+            if (Universe::allLife[i]->isded)
+            {
+                delete Universe::allLife[i];
+                FastDelete(Universe::allLife, i);
+            }
+            else
+            {
+                Universe::allLife[i]->CheckRep();
+                ++i;
+            }
+        }
+
         int pointsFilled = 0;
         for (size_t i = 0; i < Universe::worldHexes.size(); i++)
         {            
@@ -295,7 +334,6 @@ int runSim()
             size_t randpick = rand() % sectorsToVisit.size();
             int sectorWeAreVisitingNow = sectorsToVisit[randpick];
             FastDelete(sectorsToVisit, randpick);
-            Universe::worldHexes[sectorWeAreVisitingNow].localPopulation.clear();
 
             //for (size_t j = 0; j < Universe::worldHexes[sectorWeAreVisitingNow].filledIdxs.size(); j++);
 
@@ -315,11 +353,38 @@ int runSim()
                 DoEntropy(sectorWeAreVisitingNow);
                 //int energy = AttemptReaction(Universe::worldHexes[sectorWeAreVisitingNow], rand() % 20 - 5, reactants);
                 //reactants.clear();
+                /*if (sectorWeAreVisitingNow == 64 && step == 3)
+                {
+                    RandomlyReactInSolution(Universe::worldHexes[sectorWeAreVisitingNow], rand() % 20 - 25);
+                }*/
                 RandomlyReactInSolution(Universe::worldHexes[sectorWeAreVisitingNow], rand() % 20 - 25);
+                //start of nonsense
+                for (int i = 0; i < Universe::allLife.size();)
+                {
+                    if (Universe::allLife[i]->isded)
+                    {
+                        delete Universe::allLife[i];
+                        FastDelete(Universe::allLife, i);
+                    }
+                    else
+                    {
+                        Universe::allLife[i]->CheckRep();
+                        ++i;
+                    }
+                }
+                //end of nonsense
             }
+            for (size_t i = Universe::worldHexes[sectorWeAreVisitingNow].localPopulation.vec.size(); i > 0; i--)
+            {
+                FastDisconnect(&(Universe::worldHexes[sectorWeAreVisitingNow].localPopulation), i-1);
+            }
+            
         }
-        if (step < 1 && false)
-            continue;
+
+        
+
+        /*if (step < 1 && false)
+            continue;*/
         //if(step%refresh == 0)
         if (step % 3 == 0)
             DisplayAll(window);
@@ -339,6 +404,7 @@ int runSim()
             o->age++;
             //o->CheckRep();
             o->Reposition();
+            o->DoDiffusion();
             //o->CheckRep();
             //o->DoChemistry(reactants);
             //o->CheckRep();
@@ -356,30 +422,19 @@ int runSim()
             //}
             o->Activate();
         }
-        /*for (Organism* o : Universe::allLife)
+        for (int i = 0; i < Universe::allLife.size();)
         {
-            o->DoDeaths();
-        }*/
-        //for (int i = 0; i < Universe::allLife.size();)
-        //{
-        //    if (Universe::allLife[i]->center == nullptr)
-        //    {
-        //        for (Organelle* o : Universe::allLife[i]->AllOrganelles)
-        //        {
-        //            //dump guts
-        //            if (!o->isded)
-        //            {
-        //                o->SeverAllConnections();
-        //            }
-        //        }
-        //        delete Universe::allLife[i];
-        //        FastDelete(Universe::allLife, i);
-        //    }
-        //    else
-        //    {
-        //        ++i;
-        //    }
-        //}
+            if (Universe::allLife[i]->isded)
+            {
+                delete Universe::allLife[i];
+                FastDelete(Universe::allLife, i);
+            }
+            else
+            {
+                Universe::allLife[i]->CheckRep();
+                ++i;
+            }
+        }
         for (Organelle* newO : Universe::newLife)
         {
             //newO->hasBeenPlaced = 1;
@@ -423,7 +478,9 @@ int runSim()
 
             o->xpos = xpos + rand() % 800 - 400;
             o->ypos = ypos + rand() % 800 - 400;
-
+            o->structure.CalculateSum();
+            o->CheckRep();
+            o->structure.internalEnergy = 50;
             Universe::allLife.emplace_back(o);
             /*for (Organelle* oo : o->AllOrganelles)
             {

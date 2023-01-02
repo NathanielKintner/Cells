@@ -12,6 +12,7 @@ class Compound;
 //void CallReactionAndCleanUp(Compound* comp1, Compound* comp2, int& stabilityChange, int& ielem1, int& idxidx1, int& ielem2, bool useThreshold, int threshold, ReactionSpace& rs, std::vector<Compound*>& reactants, bool CompRemovedFromIsOrganelleStructure, int idxOfComp1InSolution, int idxOfComp2InSolution);
 //bool PerformReaction(Compound* comp1, Compound* comp2, int& stabilityChange, int& ielem1, int& idxidx1, int& ielem2, bool useThreshold, int threshold, Compound*& pieces, int& numPieces);
 
+bool RipAwaySpecifiedElements(Compound* takefrom, Compound* giveto, Compound* targetelements, int& instabilityChangeInCompoundTakenFrom, int& instabilityChangeInCompoundGivenTo, int threshold);
 bool RandomlyReactInSolution(ReactionSpace& rs, int threshold);
 void AdjustEnergyValues(Compound* c1, Compound* c2, int& c1instabilityChange, int& c2instabilityChange);
 bool RandomlyReactIfGoodEnough(Compound* c1, Compound* c2, int threshold, int& c1instabilityChange, int& c2instabilityChange);

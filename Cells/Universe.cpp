@@ -122,5 +122,5 @@ void Universe::addOrganelleToLocalPopulation(int xpos, int ypos, Organelle* o)
 	{
 		y = 0;
 	}
-	Universe::worldHexes[x + y * Universe::numxsectors].localPopulation.emplace_back(o);
+	FastConnect(&(Universe::worldHexes[x + y * Universe::numxsectors].localPopulation), &(o->localArea));
 }
