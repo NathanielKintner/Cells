@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -108,12 +108,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\n_kin\OneDrive\Documents\sfmlfolder\SFML-2.5.1\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\n_kin\OneDrive\Documents\sfmlfolder\SFML-2.5.1\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -148,19 +148,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\n_kin\OneDrive\Documents\sfmlfolder\SFML-2.5.1\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\SFML-2.5.1-windows-vc15-32-bit\SFML-2.5.1\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\n_kin\OneDrive\Documents\sfmlfolder\SFML-2.5.1\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cells.cpp" />
+    <ClCompile Include="Chromosome.cpp" />
     <ClCompile Include="Compound.cpp" />
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="Element.cpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="ReactionManager.cpp" />
     <ClCompile Include="ReactionSpace.cpp" />
     <ClCompile Include="Sector.cpp" />
+    <ClCompile Include="Synthase.cpp" />
     <ClCompile Include="Universe.cpp" />
     <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
@@ -194,11 +196,13 @@
     <ClInclude Include="Membrane.h" />
     <ClInclude Include="Muscle.h" />
     <ClInclude Include="NeuralNet.h" />
+    <ClInclude Include="Nucleotides.h" />
     <ClInclude Include="Organelle.h" />
     <ClInclude Include="Organism.h" />
     <ClInclude Include="ReactionManager.h" />
     <ClInclude Include="ReactionSpace.h" />
     <ClInclude Include="Sector.h" />
+    <ClInclude Include="Synthase.h" />
     <ClInclude Include="Universe.h" />
     <ClInclude Include="Utilities.h" />
   </ItemGroup>

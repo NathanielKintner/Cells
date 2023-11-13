@@ -145,5 +145,53 @@ And making sure they all have 'markers', and that the DNA does too
 
 
 
+ALLLLLLLLLLLLLLLLLLLRIGHT its 2023-06-15 and we're back at it
+
+The more I thought about this, the more I realized that it would never be what I wanted it be if it had any kind of overarching structure.
+
+Anything centralized leads to arbitrary requirements and patterns that didn't arise from anything else. The only way to truly embrace emergent complexity is to force
+EVERY SINGLE PIECE to be solitary and acting on its own. Conway's game of life is a perfect example of this. We want conways game/hell of sand with juuuust enough complexity to form life.
+
+The baseline requirement: DNA is an object in the simulation. It can be acted upon by other objects.
+
+I knew I needed other objects, and membranes are an obvious one. They are so flexible and interesting, they can provide a lot of nuance with relatively little complexity, and 
+mirror actual life quite nicely.
+I took a while trying to figure out what a membrane should DO, and I still dont have all the details worked out.
+However, I realized that a ring-shaped structure of linked nodes would be very useful.
+Nodes (which are other objects contained within the membrane) can swap places with each other, giving a computationally cheap concept of adjacency.
+It also provides a HUGE amount of information density, since every single different ordering of the ring will give potentially different results.
+My other thought is that there would be two extra nodes that represent the membrane itself. When the membrane divides, it splits at these points and each half
+joins itself at the loose ends, forming two smaller rings. Because the ordering of the ring can change in any way, this allows the division of the membrane to 
+include any subset of the internal components (even none of them at all!)
+We also have the option to do this with multiple internal nodes... but we don't HAVE to so for now we stick with 2.
+
+Then I got stuck trying to figure out what else we needed.
+
+After some time, I realized that since reading and copying the DNA are both fundamental functions required for this simulation, and since we
+are using adjacency as a way to affect the behaviour of objects inside a membrane, it made sense to have a seperate object that reads DNA and creates more objects.
+This allows us to have gene-gene interactions (one DNA is read, creates an object that reads a second DNA, creates an object that reads the first DNA in a different place)
+as well as steric hinderance (if there is something immovable between the reader and the DNA then it cant read the DNA!)
+It would be possible to create two different objects that read DNA and copy the DNA or create a different object respectively, but I can't think of a reason why this would be
+necessary or beneficial? So.... I'm thinking we'll create a DNA polymerase + ribosome combindation thingy that I'll just call 'synthase'. This term usually refers to an ensyme
+that catalyses a reaction that joins two molecules together rather than something that reads DNA, but this object is going to be making stuff and this term is very generic, so
+it seems fine to me.
+
+Once we have DNA, Membranes, and Synthase, the last things we are obviously lacking are
+1. Movement
+2. Binding objects together
+
+To this end, I think that we should have a 'polymer'. This will be something that has a well-defined length and can stretch or shrink.
+It will also be harder to displace if it is longer, and easier to displace if it is shorter, allowing a lengthened polymer to be used as an 'anchor' or 'paddle'.
+In theory I think this allows movement to occur? We'll see lmao
+
+SO. All told;
+DNA
+Membrane
+Synthase
+Polymer
+
+And hopefully... thats all we need?
 
 
+All of these should really descend from Organelle...
+Oh boy, here I go hacking again.

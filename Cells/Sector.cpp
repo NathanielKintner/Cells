@@ -65,12 +65,13 @@ void Sector::ResolveSituation(int key)
 	}
 	else
 	{
-		int solutionLocation = filledIdxs[key];
-		if (solution[solutionLocation]->elementCount == 0)
-		{
-			Compound* removedComp = RemoveCompoundByIdxInList(key);
-			delete removedComp;
-		}
+		//EDIT: We are no longer removing empty compounds!!
+		//int solutionLocation = filledIdxs[key];
+		//if (solution[solutionLocation]->elementCount == 0)
+		//{
+		//	Compound* removedComp = RemoveCompoundByIdxInList(key);
+		//	delete removedComp;
+		//}
 	}
 	
 }

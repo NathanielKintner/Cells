@@ -293,22 +293,25 @@ bool RandomlyReactInSolution(ReactionSpace& rs, int threshold)
         int idx1 = rs.GetReactantKey();
         Compound* comp1 = rs.GetReactantWithKey(idx1);
         int idx2 = rs.GetReactantKey();
-        Compound* comp2;
+        //Compound* comp2;
         //a tenth of the time, just try to react with yourself (i.e. break apart)
-        if (rand() % 10 == 0)
-        {
-            comp2 = new Compound();
-            idx2 = -1;
-        }
-        else
-        {
-            comp2 = rs.GetReactantWithKey(idx2);
-        }
+        //REMOVED!!! There are now a constant number of compounds and they are allowed to have 0 of all elements (an 'empty' compound is OK)
+        //if (rand() % 10 == 0)
+        //{
+        //    comp2 = new Compound();
+        //    idx2 = -1;
+        //}
+        //else
+        //{
+        //    comp2 = rs.GetReactantWithKey(idx2);
+        //}
+        Compound* comp2 = rs.GetReactantWithKey(idx2);
         if (idx1 == idx2)
         {
             //we return because doing chemistry with yourself causes infinite energy bugs
             //NOTE: we cannot get here if idx2 has been set to -1! this is important, if we could then
             //this would cause a memory leak.
+            //EDIT: This can't be set to -1 anymore anyway
             return false;
         }
         int stability = 0;
@@ -320,10 +323,11 @@ bool RandomlyReactInSolution(ReactionSpace& rs, int threshold)
         }
         else
         {
-            if (idx2 == -1)
-            {
-                delete comp2;
-            }
+            //EDIT: This is no longer possible
+            //if (idx2 == -1)
+            //{
+            //    delete comp2;
+            //}
             return false;
         }
         if (comp1->elementCount == 0)
@@ -331,10 +335,10 @@ bool RandomlyReactInSolution(ReactionSpace& rs, int threshold)
             comp2->internalEnergy += comp1->internalEnergy;
         }
         rs.ResolveSituation(idx1);
-        if (idx2 == -1)
+        /*if (idx2 == -1)
         {
             rs.AddCompoundToRandomLocationInSolution(comp2);
-        }
+        }*/
         return true;
     }
     return false;

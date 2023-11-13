@@ -4,7 +4,7 @@
 #include "NeuralNet.h"
 
 
-void Organelle::init()
+void Organelle::init(Nucleotides* n)
 {
 	//criticalRegion = crit;
 	//CriticalIdentity = GetCriticalCharge();
@@ -195,18 +195,6 @@ void Organelle::MakePresenceKnown()
 void Organelle::SendRepositionRequests()
 {
 	bool outerMembraneExists = outerMembrane.vec.size() == 1;
-	for (Organelle* o : innerOrganelles.vec)
-	{
-		int xdelta = xpos - o->xpos;
-		int ydelta = ypos - o->ypos;
-		double distance = sqrt(xdelta * xdelta + ydelta * ydelta);
-		int desiredDistance = size() * 2 - o->size() * 2 - 3;
-		if (desiredDistance - distance < 0)
-		{
-			double ratio = desiredDistance / (distance + 1);
-			o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, 6);
-		}
-	}
 	for (Organelle* o : connections.vec)
 	{
 		int xdelta = xpos - o->xpos;
@@ -359,7 +347,10 @@ void Organelle::Activate()
 //we use the location, the decision, and the NNoutput to determine the behaviour of the organelle will be
 void Organelle::TakeAction(int NNOutput, unsigned char location)
 {
-	char decision = geneticCode.dna[location];
+	//THIS IS BASICALLY A STUB RIGHT NOW
+
+	//char decision = geneticCode.dna[location]; //this is what we were doing just post-return
+	char decision = location; //this is some random bullshit we are doing right now. Not well-reasoned.
 
 	Chromosome newChrom;
 
@@ -372,45 +363,6 @@ void Organelle::TakeAction(int NNOutput, unsigned char location)
 	case 1:
 	{
 		//reproduce?
-		Compound target = ParseCompoundFromGeneticCode(&geneticCode, location + 1);
-		int x = innerSolution.size();
-		if (x > 0)
-		{
-			int reactionCompIdx = rand() % x;
-			Compound* reactionComp = innerSolution[reactionCompIdx];
-			int reactionCompInstability = 0;
-			int productCompInstability = 0;
-			bool didReaction = RipAwaySpecifiedElements(reactionComp, &productInProgress, &target, reactionCompInstability, productCompInstability, structure.internalEnergy);
-			if (didReaction)
-			{
-				if (productInProgress.internalEnergy < 0)
-				{
-					structure.internalEnergy += productInProgress.internalEnergy;
-					productInProgress.internalEnergy = 0;
-				}
-				if (reactionComp->sum == 0)
-				{
-					delete(reactionComp);
-					FastDelete(innerSolution, reactionCompIdx);
-				}
-			}
-			productInProgress.CalculateProduct();
-			target.CalculateProduct();
-			if (productInProgress.product == target.product)
-			{
-				CopyChromosome(&geneticCode, &newChrom);
-				MutateChromosome(&newChrom);
-				Organelle* o = CreateOrganelle(&newChrom, location + 1);
-				o->structure = productInProgress;
-				productInProgress = Compound();
-				o->xpos = xpos + rand() % 800 - 400;
-				o->ypos = ypos + rand() % 800 - 400;
-
-				FastConnect(&connections, &(o->connections));
-
-				Universe::newLife.emplace_back(o);
-			}
-		}
 
 		//if (structure.internalEnergy > 10000)
 		/*if (structure.internalEnergy > 25)
@@ -448,27 +400,7 @@ int Organelle::size()
 
 void Organelle::DoDiffusion()
 {
-	bool outerMembraneExists = outerMembrane.vec.size() == 1;
-	if (!outerMembraneExists)
-	{		
-		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
-		if (s.ContainsReactant() || innerSolution.size() > 0)
-		{
-			int diffuseidx = rand() % (s.filledIdxs.size() + innerSolution.size());
-			if (diffuseidx < s.filledIdxs.size())
-			{
-				innerSolution.emplace_back(s.RemoveCompoundByIdxInList(diffuseidx));
-			}
-			else
-			{
-				int inneridx = diffuseidx - s.filledIdxs.size();
-				Compound* tosolution = innerSolution[inneridx];
-				FastDelete(innerSolution, inneridx);
-				s.AddCompoundToRandomLocationInSolution(tosolution);
-			}
-			
-		}
-	}
+	//wow, its a stub! neato
 }
 
 void Organelle::Display(sf::RenderWindow& window, int zoom, int staticXOffset, int staticYOffset)
@@ -768,16 +700,15 @@ void Organelle::DoDeath()
 		//std::cout << "FUCK" << std::endl;
 	}
 	isded = 1;
-	bool outerMembraneExists = outerMembrane.vec.size() == 1;
-	while (innerOrganelles.vec.size() != 0)
+
+	//disconnect from association ring
+	if (right)
 	{
-		Organelle* o = innerOrganelles.vec[0];
-		FastDisconnect(&innerOrganelles, 0);
-		if (outerMembraneExists)
-		{
-			FastConnect(&(o->outerMembrane), outerMembrane.cons[0]);
-		}
+		right->left = left;
+		left->right = right;
 	}
+
+	bool outerMembraneExists = outerMembrane.vec.size() == 1;
 	//disconnect from all connected organelles
 	for (int i = connections.vec.size(); i > 0; i--)
 	{
@@ -787,10 +718,6 @@ void Organelle::DoDeath()
 	//tell membrane to disconnect from us
 	if (outerMembraneExists)
 	{
-		for (Compound* c : innerSolution)
-		{
-			outerMembrane.vec[0]->innerSolution.emplace_back(c);
-		}
 		if (structure.elementCount != 0)
 		{
 			Compound* c = new Compound();
@@ -814,10 +741,6 @@ void Organelle::DoDeath()
 	else
 	{	
 		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
-		for (Compound* c : innerSolution)
-		{
-			s.AddCompoundToRandomLocationInSolution(c);
-		}
 		if (structure.elementCount != 0)
 		{
 			Compound* c = new Compound();
@@ -849,57 +772,51 @@ void Organelle::GetImmediateFamily(std::list<Organelle*>& retList)
 	}
 }
 
-
-
-
-
-
-bool Organelle::ContainsReactant()
+ReactionSpace* Organelle::GetReactionSpace()
 {
-	return innerSolution.size() != 0;
-}
+	bool outerMembraneExists = outerMembrane.vec.size() == 1;
 
-int Organelle::GetReactantKey()
-{
-	return rand() % innerSolution.size();
-}
+	ReactionSpace* rs;
 
-Compound* Organelle::GetReactantWithKey(int key)
-{
-	return innerSolution[key];
-}
-
-void Organelle::ResolveSituation(int key)
-{
-	/*if (key != -1)
+	if (outerMembraneExists)
 	{
-		if (innerSolution[key]->mass == 0 || numpieces != 1)
-		{
-			delete innerSolution[key];
-			FastDelete(innerSolution, key);
-		}
+		rs = outerMembrane.vec[0];
 	}
-	for (int i = 0; i < numpieces; i++)
+	else
 	{
-		Compound* newComp = new Compound();
-		*newComp = pieces[i];
-		innerSolution.emplace_back(newComp);
-	}*/
-	if (innerSolution[key]->elementCount == 0)
-	{
-		delete innerSolution[key];
-		FastDelete(innerSolution, key);
+		rs = &Universe::getSectorAtLocation(xpos, ypos);
 	}
+
+	return rs;
 }
 
-void Organelle::AddCompoundToRandomLocationInSolution(Compound* c)
+//swaps places with the organelle to the left in the ring
+void Organelle::RotateLeft() 
 {
-	innerSolution.emplace_back(c);
+	//debugged on a piece of paper, it's just easier that way
+	//I think?? this should work even when there's only 3 things in the ring, but going to 2 makes shit weird
+	Organelle* swapPartner = left;
+	left = swapPartner->left;
+	left->right = this;
+	swapPartner->left = this;
+	swapPartner->right = right;
+	right->left = swapPartner;
+	right = swapPartner;
 }
 
-
-
-
+//swaps places with the organelle to the right in the ring
+void Organelle::RotateRight() 
+{
+	//debugged on a piece of paper, it's just easier that way
+	//I think?? this should work even when there's only 3 things in the ring, but going to 2 makes shit weird
+	Organelle* swapPartner = right;
+	right = swapPartner->right;
+	right->left = this;
+	swapPartner->right = this;
+	swapPartner->left = left;
+	left->right = swapPartner;
+	left = swapPartner;
+}
 
 
 

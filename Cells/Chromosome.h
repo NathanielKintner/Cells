@@ -1,16 +1,22 @@
 #pragma once
 
+#include "Organelle.h"
+#include "Synthase.h"
+#include "Nucleotides.h"
 
 
 
-
-
-class Chromosome
+class Chromosome : public Organelle
 {
 public:
 
+	Nucleotides sequence;
 
-	char dna[256];
+	ConnectionNode<Chromosome*, Synthase*> synthaseReadingThis;
+
+	void init(Nucleotides* n);
+	void DoDeath();
+
 
 	~Chromosome() {/* stuff */ }
 

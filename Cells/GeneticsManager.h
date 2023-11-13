@@ -15,11 +15,11 @@
 #include "NeuralNet.h"
 #include "Chromosome.h"
 
-void RandomizeChromosome(Chromosome* chr);
-void CopyChromosome(Chromosome* copyfrom, Chromosome* copyto);
-void MutateChromosome(Chromosome* chr);
-Compound ParseCompoundFromGeneticCode(Chromosome* chr, unsigned char location);
-Organelle* CreateOrganelle(Chromosome* chr, unsigned char location);
+void RandomizeChromosome(Nucleotides* chr);
+void CopyChromosome(Nucleotides* copyfrom, Nucleotides* copyto);
+void MutateChromosome(Nucleotides* chr);
+Compound ParseCompoundFromGeneticCode(Nucleotides* chr, unsigned char location);
+Organelle* CreateOrganelle(Nucleotides* chr, unsigned char location);
 
 
 //Organelle* ParsePart(std::vector<std::string>& compoundStrings, unsigned char parts[], unsigned char links[], int idx, Organism* parentPtr);

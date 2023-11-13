@@ -1,4 +1,174 @@
-//#include "Membrane.h"
+#include "Membrane.h"
+
+void Membrane::init(Nucleotides* n)
+{
+	associationRingNodeOne.left = &associationRingNodeTwo;
+	associationRingNodeOne.right = &associationRingNodeTwo;
+	associationRingNodeTwo.left = &associationRingNodeOne;
+	associationRingNodeTwo.right = &associationRingNodeOne;
+	Organelle::init(n);
+}
+
+bool Membrane::ContainsReactant()
+{
+	return innerSolution.size() != 0;
+}
+
+int Membrane::GetReactantKey()
+{
+	return rand() % innerSolution.size();
+}
+
+Compound* Membrane::GetReactantWithKey(int key)
+{
+	return innerSolution[key];
+}
+
+void Membrane::ResolveSituation(int key)
+{
+	/*if (key != -1)
+	{
+		if (innerSolution[key]->mass == 0 || numpieces != 1)
+		{
+			delete innerSolution[key];
+			FastDelete(innerSolution, key);
+		}
+	}
+	for (int i = 0; i < numpieces; i++)
+	{
+		Compound* newComp = new Compound();
+		*newComp = pieces[i];
+		innerSolution.emplace_back(newComp);
+	}*/
+	//EDIT: We are not doing this anymore! Empty compounds are OK
+	/*if (innerSolution[key]->elementCount == 0)
+	{
+		delete innerSolution[key];
+		FastDelete(innerSolution, key);
+	}*/
+}
+
+void Membrane::AddCompoundToRandomLocationInSolution(Compound* c)
+{
+	innerSolution.emplace_back(c);
+}
+
+
+
+
+
+void Membrane::SendRepositionRequests()
+{
+	for (Organelle* o : innerOrganelles.vec)
+	{
+		int xdelta = xpos - o->xpos;
+		int ydelta = ypos - o->ypos;
+		double distance = sqrt(xdelta * xdelta + ydelta * ydelta);
+		int desiredDistance = size() * 2 - o->size() * 2 - 3;
+		if (desiredDistance - distance < 0)
+		{
+			double ratio = desiredDistance / (distance + 1);
+			o->ReceiveRepositionRequest(xdelta - xdelta * ratio, ydelta - ydelta * ratio, 6);
+		}
+	}
+	Organelle::SendRepositionRequests();
+}
+
+
+
+
+void Membrane::DoDeath()
+{
+	bool outerMembraneExists = outerMembrane.vec.size() == 1;
+
+	//dump contents of internal organelles
+	while (innerOrganelles.vec.size() != 0)
+	{
+		Organelle* o = innerOrganelles.vec[0];
+		FastDisconnect(&innerOrganelles, 0);
+		if (outerMembraneExists)
+		{
+			FastConnect(&(o->outerMembrane), outerMembrane.cons[0]);
+		}
+	}
+
+	//dump contents of internal solution
+	if (outerMembraneExists)
+	{
+		for (Compound* c : innerSolution)
+		{
+			outerMembrane.vec[0]->innerSolution.emplace_back(c);
+		}
+	}
+	else
+	{
+		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
+		for (Compound* c : innerSolution)
+		{
+			s.AddCompoundToRandomLocationInSolution(c);
+		}
+	}
+
+	//call base method to take care of the normal stuff
+	Organelle::DoDeath();
+}
+
+int Membrane::size()
+{
+	return 20;
+}
+
+
+void Membrane::DoDiffusion()
+{
+	bool outerMembraneExists = outerMembrane.vec.size() == 1;
+	//TODO make sure we can diffuse into recursively nested membranes
+	if (!outerMembraneExists)
+	{
+		Sector& s = Universe::getSectorAtLocation(xpos, ypos);
+		if (s.ContainsReactant() || innerSolution.size() > 0)
+		{
+			int diffuseidx = rand() % (s.filledIdxs.size() + innerSolution.size());
+			if (diffuseidx < s.filledIdxs.size())
+			{
+				innerSolution.emplace_back(s.RemoveCompoundByIdxInList(diffuseidx));
+			}
+			else
+			{
+				int inneridx = diffuseidx - s.filledIdxs.size();
+				Compound* tosolution = innerSolution[inneridx];
+				FastDelete(innerSolution, inneridx);
+				s.AddCompoundToRandomLocationInSolution(tosolution);
+			}
+
+		}
+	}
+	Organelle::DoDiffusion;
+}
+
+//puts the new organelle in between ring node one and the thing to the right of ring node one
+void Membrane::AddOrganelleToRing(Organelle* o) 
+{
+	o->right = associationRingNodeOne.right;
+	o->left = &associationRingNodeOne;
+	associationRingNodeOne.right->left = o;
+	associationRingNodeOne.right = o;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //
 //
 //void Membrane::SendRepositionRequests()

@@ -1,6 +1,7 @@
 #pragma once
 
 class Organelle;
+class Membrane;
 
 #include <vector>
 #include "Compound.h"
@@ -12,12 +13,13 @@ class Organelle;
 #include "NeuralNet.h"
 #include "Chromosome.h"
 #include "GeneticsManager.h"
+#include "Membrane.h"
 
 
-class Organelle : public ReactionSpace
+class Organelle// : public ReactionSpace
 {
 public:
-	Chromosome geneticCode;
+	//Chromosome geneticCode;
 
 	int xpos;
 	int ypos;
@@ -27,12 +29,14 @@ public:
 
 	int age = 0;
 
+	Organelle* right;
+	Organelle* left;
+
 
 	ConnectionNode<Organelle*, Sector*> localArea;
 
-	ConnectionNode<Organelle*, Organelle*> outerMembrane;
-	ConnectionNode<Organelle*, Organelle*> innerOrganelles;
-	std::vector<Compound*> innerSolution;
+	ConnectionNode<Organelle*, Membrane*> outerMembrane;
+
 	Compound idealArrangement;
 
 	NeuralNet Brain;
@@ -58,22 +62,25 @@ public:
 	//void SeverAllConnections();
 	void GetImmediateFamily(std::list<Organelle*>& retList);
 	void MakePresenceKnown();
-	void SendRepositionRequests();
+	virtual void SendRepositionRequests();
 	void ReceiveRepositionRequest(int deltax, int deltay, int force);
 	void Reposition();
 	void Sense();
 	void Activate();
-	void TakeAction(int NNOutput, unsigned char location);
+	virtual void TakeAction(int NNOutput, unsigned char location);
 	void Display(sf::RenderWindow& window, int zoom, int staticXOffset, int staticYOffset);
-	int size();
+	virtual int size();
 	bool IsAlive();
 	int AlivenessPercentageGuess();
-	void DoDeath();
-	void DoDiffusion();
+	virtual void DoDeath();
+	virtual void DoDiffusion();
 	void SetPosition(int x, int y);
+	void RotateLeft();
+	void RotateRight();
+
 	//Element GetCriticalCharge();
 	//void init(Compound struc, int crit);
-	void init();
+	virtual void init(Nucleotides* n);
 
 	//void tempinit();
 	int mass();
@@ -81,13 +88,7 @@ public:
 	void DoChemistry(std::vector<Compound*>& reactants);
 	//void CheckConnectionDeath(std::list<Organelle*>& border);
 
-
-	//ReactionSpace Interface
-	bool ContainsReactant();
-	int GetReactantKey();
-	Compound* GetReactantWithKey(int key);
-	void ResolveSituation(int key);
-	void AddCompoundToRandomLocationInSolution(Compound* c);
+	ReactionSpace* GetReactionSpace();
 
 	//ideally, this would be protected, but im running into implementation issues so we'll do it later
 	//void UpdateConnectionMetaData(unsigned char MetadataToFindEntry, unsigned char MetadataToChangeEntryTo);
